@@ -1,4 +1,10 @@
 .vscode/
 dataset/
 __pycache__/
+
+
 *.pyc
+*.pt
+*.pth
+
+*.json
