@@ -1,6 +1,6 @@
-# sanity_checks.py
 import json, numpy as np, hashlib
 from utils import dataset_loader
+
 # load raw processed data
 X = np.load('dataset/processed_acc_gyr/X.npy')
 y = np.load('dataset/processed_acc_gyr/y.npy')
