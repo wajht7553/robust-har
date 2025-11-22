@@ -23,6 +23,7 @@ from utils.training_utils import Trainer, compute_metrics, save_model
 # Import models
 from models.MobileViT import MobileViT
 from models.DeepConvLSTM import DeepConvLSTM
+from models.Mamba import MambaHAR
 
 
 class LOSOExperiment:
@@ -38,7 +39,7 @@ class LOSOExperiment:
     ):
         """
         Args:
-            model_name: 'deepconvlstm' or 'mobilevit'
+            model_name: 'deepconvlstm' or 'mobilevit' or 'mamba'
             config: model configuration dict
             data_dir: path to processed data
             results_dir: path to save results
@@ -84,6 +85,8 @@ class LOSOExperiment:
             return DeepConvLSTM(self.config)
         elif self.model_name.lower() == "mobilevit":
             return MobileViT(self.config)
+        elif self.model_name.lower() == "mamba":
+            return MambaHAR(self.config)
         else:
             raise ValueError(f"Unknown model: {self.model_name}")
 
@@ -134,13 +137,18 @@ class LOSOExperiment:
         criterion = nn.CrossEntropyLoss()
 
         trainer = Trainer(
-            model, self.device, criterion, optimizer, 
-            early_stopping_patience=10, 
-            checkpoint_path=checkpoint_path
+            model,
+            self.device,
+            criterion,
+            optimizer,
+            early_stopping_patience=10,
+            checkpoint_path=checkpoint_path,
         )
 
         # Train
-        print(f"\nTraining for up to {epochs} epochs (early stopping enabled, patience=10)...")
+        print(
+            f"\nTraining for up to {epochs} epochs (early stopping enabled, patience=10)..."
+        )
         history = trainer.train(train_loader, test_loader, epochs, verbose=True)
 
         # Final evaluation on test set
@@ -154,10 +162,12 @@ class LOSOExperiment:
         print(f"  Accuracy: {metrics['accuracy']:.4f}")
         print(f"  F1 (macro): {metrics['f1_macro']:.4f}")
         print(f"  F1 (weighted): {metrics['f1_weighted']:.4f}")
-        
+
         # Report early stopping info
-        if history.get('early_stopped', False):
-            print(f"  Early stopped at epoch {history['total_epochs']} (best: epoch {history['best_epoch']})")
+        if history.get("early_stopped", False):
+            print(
+                f"  Early stopped at epoch {history['total_epochs']} (best: epoch {history['best_epoch']})"
+            )
 
         # Save final model checkpoint (best model is already saved during training)
         model_path = os.path.join(self.experiment_dir, f"model_{subject}.pt")
@@ -301,13 +311,35 @@ def get_mobilevit_config(window_size=200, nb_channels=6, nb_classes=8):
     }
 
 
+def get_mamba_config(window_size=200, nb_channels=6, nb_classes=8):
+    """Get default config for MambaHAR"""
+    return {
+        "sequence_length": window_size,
+        "input_dim": nb_channels,
+        "nb_classes": nb_classes,
+        # Mamba-specific hyperparameters
+        "d_model": 128,  # Hidden dimension (try 64, 128, 256)
+        "n_layers": 4,  # Number of Mamba blocks (try 2-6)
+        "d_state": 16,  # SSM state dimension (16 is standard)
+        "d_conv": 4,  # Local convolution width (4 is standard)
+        "expand": 2,  # Expansion factor (2 is standard)
+        # Training hyperparameters
+        "dropout": 0.1,
+        "batch_size": 32,
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "num_epochs": 50,
+        "patience": 10,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train models with LOSO validation")
     parser.add_argument(
         "--model",
         type=str,
         required=True,
-        choices=["deepconvlstm", "mobilevit", "both"],
+        choices=["deepconvlstm", "mobilevit", "mamba", "all"],
         help="Model to train",
     )
     parser.add_argument(
@@ -334,8 +366,8 @@ def main():
     nb_classes = 8  # number of activities
 
     models_to_train = []
-    if args.model == "both":
-        models_to_train = ["deepconvlstm", "mobilevit"]
+    if args.model == "all":
+        models_to_train = ["deepconvlstm", "mobilevit", "mamba"]
     else:
         models_to_train = [args.model]
 
@@ -344,9 +376,11 @@ def main():
         # Get model config
         if model_name == "deepconvlstm":
             config = get_deepconvlstm_config(window_size, nb_channels, nb_classes)
-        else:
+        elif model_name == "mobilevit":
             config = get_mobilevit_config(window_size, nb_channels, nb_classes)
-
+        else:  # mamba
+            config = get_mamba_config(window_size, nb_channels, nb_classes)
+        
         # Create experiment and run LOSO
         experiment = LOSOExperiment(
             model_name=model_name,

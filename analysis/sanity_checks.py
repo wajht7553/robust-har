@@ -1,5 +1,15 @@
-import json, numpy as np, hashlib
+
+import os
+import sys
+import json
+import hashlib
+import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from utils import dataset_loader
+
+
 
 # load raw processed data
 X = np.load('dataset/processed_acc_gyr/X.npy')
