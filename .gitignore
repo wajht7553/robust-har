@@ -1,6 +1,7 @@
 .vscode/
 dataset/
 __pycache__/
+env/
 
 
 *.pyc
