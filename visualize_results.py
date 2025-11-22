@@ -252,8 +252,8 @@ def print_summary(results):
         subj = subjects[subj_name]
         acc = subj["test_metrics"]["accuracy"]
         f1 = subj["test_metrics"]["f1_macro"]
-        train_size = subj["train_size"]
-        test_size = subj["test_size"]
+        train_size = subj.get("train_size", "N/A")
+        test_size = subj.get("test_size", "N/A")
         print(
             f"  {subj_name:<12} {acc:<12.4f} {f1:<12.4f} {train_size:<12} {test_size:<12}"
         )
