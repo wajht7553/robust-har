@@ -1,3 +1,4 @@
+
 ##################################################
 # Main training script for LOSO validation
 # Trains DeepConvLSTM and MobileViT models
@@ -17,7 +18,7 @@ from datetime import datetime
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from utils.dataset_loader import LOSOSplitter, create_dataloaders
+from utils.dataset_loader import LOSOSplitter, create_dataloaders, SensorFailureTransform
 from utils.training_utils import Trainer, compute_metrics, save_model
 
 # Import models
@@ -35,6 +36,7 @@ class LOSOExperiment:
         data_dir="dataset/processed_acc_gyr",
         results_dir="results",
         device=None,
+        modality_dropout=0.0,
     ):
         """
         Args:
@@ -43,6 +45,7 @@ class LOSOExperiment:
             data_dir: path to processed data
             results_dir: path to save results
             device: torch device (auto-detect if None)
+            modality_dropout: probability of dropping gyro during training
         """
         self.model_name = model_name
         self.config = config
@@ -53,6 +56,7 @@ class LOSOExperiment:
             if device
             else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         )
+        self.modality_dropout = modality_dropout
 
         # Create results directory
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -68,6 +72,7 @@ class LOSOExperiment:
             "config": config,
             "device": str(self.device),
             "timestamp": timestamp,
+            "modality_dropout": modality_dropout,
             "subjects": {},
             "aggregate_metrics": {},
         }
@@ -75,6 +80,7 @@ class LOSOExperiment:
         print(f"\n{'='*80}")
         print(f"LOSO Experiment: {model_name}")
         print(f"Device: {self.device}")
+        print(f"Modality Dropout (Gyro): {self.modality_dropout}")
         print(f"Results directory: {self.experiment_dir}")
         print(f"{'='*80}\n")
 
@@ -117,9 +123,18 @@ class LOSOExperiment:
         print(f"Train size: {len(y_train)}, Test size: {len(y_test)}")
         print(f"{'-'*80}\n")
 
+        # Define transforms
+        train_transform = None
+        if self.modality_dropout > 0:
+            train_transform = SensorFailureTransform(p_dropout_gyro=self.modality_dropout)
+            print(f"Applying Modality Dropout (p={self.modality_dropout}) to training data")
+
         # Create dataloaders
         train_loader, test_loader, norm_stats = create_dataloaders(
-            X_train, y_train, X_test, y_test, batch_size=batch_size, num_workers=0
+            X_train, y_train, X_test, y_test, 
+            batch_size=batch_size, 
+            num_workers=0,
+            train_transform=train_transform
         )
 
         # Create model
@@ -324,6 +339,12 @@ def main():
     parser.add_argument(
         "--results_dir", type=str, default="results", help="Path to save results"
     )
+    parser.add_argument(
+        "--modality_dropout",
+        type=float,
+        default=0.0,
+        help="Probability of dropping gyro during training",
+    )
 
     args = parser.parse_args()
 
@@ -353,6 +374,7 @@ def main():
             config=config,
             data_dir=args.data_dir,
             results_dir=args.results_dir,
+            modality_dropout=args.modality_dropout,
         )
 
         experiment.run_loso(epochs=args.epochs, batch_size=args.batch_size, lr=args.lr)
