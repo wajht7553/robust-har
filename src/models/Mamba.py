@@ -1,11 +1,23 @@
 import torch
 import torch.nn as nn
-from mamba_ssm import Mamba
+
+try:
+    from mamba_ssm import Mamba
+
+    MAMBA_AVAILABLE = True
+except ImportError:
+    MAMBA_AVAILABLE = False
+    Mamba = None
 
 
 class MambaHAR(nn.Module):
     def __init__(self, config):
         super(MambaHAR, self).__init__()
+
+        if not MAMBA_AVAILABLE:
+            raise ImportError(
+                "mamba_ssm is not installed. Please install it to use MambaHAR."
+            )
 
         self.input_dim = config["input_dim"]  # 113 (features)
         self.sequence_length = config["sequence_length"]  # 128
