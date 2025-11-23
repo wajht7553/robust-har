@@ -70,6 +70,7 @@ class Trainer:
             output = self.model(data)
             loss = self.criterion(output, target)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
 
             total_loss += loss.item()
