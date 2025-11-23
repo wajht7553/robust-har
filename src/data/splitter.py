@@ -37,19 +37,10 @@ class LOSOSplitter:
         return self.X[start_idx:end_idx], self.y[start_idx:end_idx]
 
     def get_train_test_split(self, test_subject):
-        """
-        Get train/test split for LOSO with one subject held out
-
-        Args:
-            test_subject: subject to use as test set (e.g., 'proband1')
-
-        Returns:
-            X_train, y_train, X_test, y_test
-        """
+        """Legacy method for standard LOSO"""
         if test_subject not in self.subjects:
             raise ValueError(f"Subject {test_subject} not found in dataset")
 
-        # Collect training data from all subjects except test_subject
         X_train_list = []
         y_train_list = []
 
@@ -67,15 +58,42 @@ class LOSOSplitter:
         return X_train, y_train, X_test, y_test
 
     def get_loso_splits(self):
-        """
-        Generator that yields LOSO splits
-
-        Yields:
-            (test_subject, X_train, y_train, X_test, y_test)
-        """
+        """Legacy generator"""
         for subject in self.subjects:
             X_train, y_train, X_test, y_test = self.get_train_test_split(subject)
             yield subject, X_train, y_train, X_test, y_test
+
+    def get_robust_loso_splits(self):
+        """
+        Generator for Robust LOSO:
+        Yields:
+            (test_subj, val_subj, X_train, y_train, X_val, y_val, X_test, y_test)
+        """
+        num_subjects = len(self.subjects)
+        
+        for i, test_subject in enumerate(self.subjects):
+            # Select validation subject (next one, cyclic)
+            val_idx = (i + 1) % num_subjects
+            val_subject = self.subjects[val_idx]
+            
+            X_train_list = []
+            y_train_list = []
+            
+            X_test, y_test = self.get_subject_data(test_subject)
+            X_val, y_val = self.get_subject_data(val_subject)
+            
+            for subject in self.subjects:
+                if subject == test_subject or subject == val_subject:
+                    continue
+                
+                X_subj, y_subj = self.get_subject_data(subject)
+                X_train_list.append(X_subj)
+                y_train_list.append(y_subj)
+                
+            X_train = np.vstack(X_train_list)
+            y_train = np.concatenate(y_train_list)
+            
+            yield test_subject, val_subject, X_train, y_train, X_val, y_val, X_test, y_test
 
 
 def create_dataloaders(
@@ -90,17 +108,6 @@ def create_dataloaders(
 ):
     """
     Create train and test dataloaders with proper normalization
-
-    Args:
-        X_train, y_train: training data
-        X_test, y_test: test data
-        batch_size: batch size for dataloaders
-        num_workers: number of workers for data loading
-        train_transform: transform to apply to training data
-        test_transform: transform to apply to test data
-
-    Returns:
-        train_loader, test_loader, (mean, std) for normalization
     """
     # Create training dataset and get normalization stats
     train_dataset = HARDataset(

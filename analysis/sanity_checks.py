@@ -5,9 +5,8 @@ import json
 import hashlib
 import numpy as np
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from utils import dataset_loader
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from src.data import splitter
 
 
 
@@ -30,7 +29,7 @@ for c in range(X.shape[2]):
         print('channel', c, 'contains values overlapping label set (possible leak)')
 
 # Use LOSO splitter to check for exact duplicates between train/test per fold
-splitter = dataset_loader.LOSOSplitter('dataset/processed_acc_gyr')
+splitter = splitter.LOSOSplitter('dataset/processed_acc_gyr')
 for subj in splitter.subjects[:]:
     X_train, y_train, X_test, y_test = splitter.get_train_test_split(subj)
     def hashes(Xarr):
