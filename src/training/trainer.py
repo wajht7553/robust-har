@@ -157,7 +157,7 @@ class Trainer:
 
             # Learning rate scheduling
             if self.scheduler:
-                self.scheduler.step()
+                self.scheduler.step(val_loss)
 
             # Check for improvement
             improved = False
