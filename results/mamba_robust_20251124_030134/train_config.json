@@ -1,0 +1,16 @@
+{
+  "epochs": 50,
+  "batch_size": 128,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "data_dir": "dataset/processed_acc_gyr",
+  "results_dir": "results",
+  "input_channels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}
