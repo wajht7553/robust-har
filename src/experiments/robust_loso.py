@@ -114,16 +114,22 @@ class RobustLOSOExperiment:
             weight_decay=self.train_config.get("weight_decay", 0.0),
         )
 
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode="min", factor=0.5, patience=5)
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #     optimizer, mode="min", factor=0.5, patience=5)
+
+        # Cosine Annealing Scheduler
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=self.train_config["epochs"], eta_min=1e-6
+        )
 
         trainer = Trainer(
             model,
             self.device,
             optimizer=optimizer,
+            scheduler=scheduler,
             early_stopping_patience=self.train_config.get("patience", 10),
             checkpoint_path=checkpoint_path,
-            scheduler=scheduler,
+            aux_weight=self.train_config.get("aux_weight", 0.4),
         )
 
         history = trainer.train(train_loader, val_loader, self.train_config["epochs"])

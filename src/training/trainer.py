@@ -17,6 +17,7 @@ class Trainer:
         scheduler=None,
         early_stopping_patience=10,
         checkpoint_path=None,
+        aux_weight=0.4,
     ):
         """
         Args:
@@ -27,6 +28,7 @@ class Trainer:
             scheduler: learning rate scheduler (optional)
             early_stopping_patience: number of epochs to wait before early stopping (default: 10)
             checkpoint_path: path to save best model checkpoint (optional)
+            aux_weight: weight for auxiliary loss (default: 0.4)
         """
         self.model = model.to(device)
         self.device = device
@@ -37,6 +39,7 @@ class Trainer:
         self.scheduler = scheduler
         self.early_stopping_patience = early_stopping_patience
         self.checkpoint_path = checkpoint_path
+        self.aux_weight = aux_weight
 
         self.train_losses = []
         self.val_losses = []
@@ -68,7 +71,17 @@ class Trainer:
 
             self.optimizer.zero_grad()
             output = self.model(data)
-            loss = self.criterion(output, target)
+            
+            # Handle auxiliary output
+            if isinstance(output, tuple):
+                out, aux_out = output
+                loss = self.criterion(out, target)
+                if aux_out is not None:
+                    loss += self.aux_weight * self.criterion(aux_out, target)
+                output = out
+            else:
+                loss = self.criterion(output, target)
+                
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()

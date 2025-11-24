@@ -295,6 +295,12 @@ class DeepConvLSTM(nn.Module):
                 self.fc = nn.Linear(self.nb_filters * self.nb_channels, self.nb_classes)
         else:
             self.fc = nn.Linear(self.nb_units_lstm, self.nb_classes)
+            
+        # Auxiliary classifier (attached after conv blocks)
+        if self.reduce_layer:
+             self.aux_fc = nn.Linear(self.reduce_layer_output * self.nb_channels, self.nb_classes)
+        else:
+             self.aux_fc = nn.Linear(self.nb_filters * self.nb_channels, self.nb_classes)
 
     def forward(self, x):
         # reshape data for convolutions
@@ -307,6 +313,15 @@ class DeepConvLSTM(nn.Module):
         if self.reduce_layer:
             x = self.reduce(x)
             self.final_seq_len = x.shape[2]
+            
+        # Auxiliary output calculation
+        aux_out = None
+        if self.training:
+            # Global Average Pooling for aux head
+            x_aux = nn.functional.adaptive_avg_pool2d(x, (1, x.shape[3]))
+            x_aux = x_aux.view(x_aux.size(0), -1)
+            aux_out = self.aux_fc(x_aux)
+
         # permute dimensions and reshape for LSTM
         x = x.permute(0, 2, 1, 3)
         if self.reduce_layer:
@@ -329,8 +344,11 @@ class DeepConvLSTM(nn.Module):
         x = self.fc(x)
         # reshape data and return predicted label of last sample within final sequence (determines label of window)
         out = x.view(-1, self.final_seq_len, self.nb_classes)
+        out = out[:, -1, :]
 
-        return out[:, -1, :]
+        if self.training:
+            return out, aux_out
+        return out
 
     def number_of_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
