@@ -70,9 +70,9 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Find all trained models
-    model_files = glob.glob(os.path.join(args.experiment_dir, "model_*.pt"))
+    model_files = glob.glob(os.path.join(args.experiment_dir, "best_model_*.pt"))
     subjects = [
-        os.path.basename(f).replace("model_", "").replace(".pt", "")
+        os.path.basename(f).replace("best_model_", "").replace(".pt", "")
         for f in model_files
     ]
 
@@ -104,8 +104,9 @@ def main():
 
         # Load Model
         model = create_model(model_name, model_config)
-        model_path = os.path.join(args.experiment_dir, f"model_{subject}.pt")
+        model_path = os.path.join(args.experiment_dir, f"best_model_{subject}.pt")
         load_model(model, model_path, device)
+        model.to(device)
 
         # 1. Robustness Curve (Noise Injection)
         robustness_data[subject] = []
@@ -120,7 +121,7 @@ def main():
                 )
 
             _, test_loader, _ = create_dataloaders(
-                None, None, X_test, y_test, batch_size=32, test_transform=transform
+                X_train, y_train, X_test, y_test, batch_size=32, test_transform=transform
             )
 
             metrics, _, _, _ = evaluate_with_transform(model, test_loader, device)
@@ -135,7 +136,7 @@ def main():
         # 2. Graceful Failure (Missing Gyro)
         transform = MissingModalityTransform(modality="gyro", p=1.0)
         _, test_loader, _ = create_dataloaders(
-            None, None, X_test, y_test, batch_size=32, test_transform=transform
+            X_train, y_train, X_test, y_test, batch_size=32, test_transform=transform
         )
         _, targets, preds, _ = evaluate_with_transform(model, test_loader, device)
 
@@ -157,7 +158,8 @@ def main():
     # Assuming standard classes for now, or infer from data
     # Ideally, we should load class names from a config or dataset metadata
     num_classes = len(np.unique(aggregated_targets_missing_gyro))
-    classes = [f"Class {i}" for i in range(num_classes)]
+    classes = ['Walk', 'Run', 'Sit', 'Stand', 'Lie', 'ClimbUp', 'ClimbDn', 'Jump']
+
 
     cm = confusion_matrix(
         aggregated_targets_missing_gyro, aggregated_preds_missing_gyro
@@ -190,11 +192,12 @@ def main():
         X_test = X_test[:, :, : model_config["nb_channels"]]
 
     model = create_model(model_name, model_config)
-    model_path = os.path.join(args.experiment_dir, f"model_{representative_subject}.pt")
+    model_path = os.path.join(args.experiment_dir, f"best_model_{representative_subject}.pt")
     load_model(model, model_path, device)
+    model.to(device)
 
     _, test_loader, _ = create_dataloaders(
-        None, None, X_test, y_test, batch_size=32, test_transform=None
+        X_train, y_train, X_test, y_test, batch_size=32, test_transform=None
     )
 
     _, targets, _, features = evaluate_with_transform(model, test_loader, device)
