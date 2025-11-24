@@ -5,6 +5,3 @@ env/
 
 
 *.pyc
-*.pt
-*.pth
-*.png
