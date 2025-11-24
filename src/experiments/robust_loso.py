@@ -53,9 +53,9 @@ class RobustLOSOExperiment:
             num_workers=0,
         )
 
-        self.model_name = model_name
-        self.model_config = model_config
-        self.train_config = train_config
+        self.model_name = self.exp_manager.model_name
+        self.model_config = self.exp_manager.model_config
+        self.train_config = self.exp_manager.train_config
 
     @property
     def experiment_dir(self):

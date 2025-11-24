@@ -97,16 +97,20 @@ class ExperimentManager:
         if os.path.exists(existing_model_config_path):
             existing_model_config = load_json(existing_model_config_path)
             if existing_model_config != self.model_config:
+                self.model_config = existing_model_config
                 print(
-                    "Warning: Model config differs from existing experiment. Using provided config."
+                    "Warning: Model config differs from existing experiment. Using existing config."
                 )
 
         if os.path.exists(existing_train_config_path):
             existing_train_config = load_json(existing_train_config_path)
             if existing_train_config != self.train_config:
+                self.train_config = existing_train_config
                 print(
-                    "Warning: Train config differs from existing experiment. Using provided config."
+                    "Warning: Train config differs from existing experiment. Using existing config."
                 )
+        print(f"Model config: {self.model_config}\n")
+        print(f"Train config: {self.train_config}")
 
     def save_results(self):
         """Save current results to JSON file"""
