@@ -86,7 +86,7 @@ class MobileNetV3(nn.Module):
         super(MobileNetV3, self).__init__()
         self.nb_channels = config["nb_channels"]
         self.nb_classes = config["nb_classes"]
-        self.dropout_prob = config.get("drop_prob", 0.2)
+        self.dropout_prob = config.get("drop_prob", 0.3)
         
         # MobileNetV3-Small configuration adapted for 1D
         cfgs = [

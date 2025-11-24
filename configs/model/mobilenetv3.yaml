@@ -1,0 +1,3 @@
+nb_channels: 6
+nb_classes: 8
+dropout: 0.3

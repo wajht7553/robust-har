@@ -8,7 +8,7 @@ from scipy import interpolate
 INPUT_DIR = "dataset/raw_acc_gyr"  # folder created after extraction
 OUTPUT_DIR = "dataset/processed_acc_gyr"  # final ML-ready dataset
 TARGET_RATE = 50  # uniform sampling frequency
-WINDOW_SIZE_SEC = 4.0  # window length
+WINDOW_SIZE_SEC = 5.0  # window length
 STRIDE_SEC = 2.0  # window stride
 MIN_SAMPLES = TARGET_RATE * WINDOW_SIZE_SEC
 
