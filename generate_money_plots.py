@@ -71,10 +71,10 @@ def main():
 
     # Find all trained models
     model_files = glob.glob(os.path.join(args.experiment_dir, "best_model_*.pt"))
-    subjects = [
+    subjects = sorted([
         os.path.basename(f).replace("best_model_", "").replace(".pt", "")
         for f in model_files
-    ]
+    ], key=lambda x: int(x.replace("proband", "")))
 
     if not subjects:
         print("No model files found! Cannot proceed.")
@@ -99,8 +99,12 @@ def main():
         X_train, y_train, X_test, y_test = splitter.get_train_test_split(subject)
 
         # Handle channel mismatch
-        if model_config["nb_channels"] < X_test.shape[2]:
-            X_test = X_test[:, :, : model_config["nb_channels"]]
+        try:
+            if model_config["nb_channels"] < X_test.shape[2]:
+                X_test = X_test[:, :, : model_config["nb_channels"]]
+        except KeyError:
+            if model_config["input_dim"] < X_test.shape[2]:
+                X_test = X_test[:, :, : model_config["input_dim"]]
 
         # Load Model
         model = create_model(model_name, model_config)
@@ -155,9 +159,6 @@ def main():
 
     # 2. Graceful Failure Matrix (Aggregated)
     print("\nGenerating Aggregated Confusion Matrix (Missing Gyro)...")
-    # Assuming standard classes for now, or infer from data
-    # Ideally, we should load class names from a config or dataset metadata
-    num_classes = len(np.unique(aggregated_targets_missing_gyro))
     classes = ['Walk', 'Run', 'Sit', 'Stand', 'Lie', 'ClimbUp', 'ClimbDn', 'Jump']
 
 
@@ -188,8 +189,12 @@ def main():
     X_train, y_train, X_test, y_test = splitter.get_train_test_split(
         representative_subject
     )
-    if model_config["nb_channels"] < X_test.shape[2]:
-        X_test = X_test[:, :, : model_config["nb_channels"]]
+    try:
+        if model_config["nb_channels"] < X_test.shape[2]:
+            X_test = X_test[:, :, : model_config["nb_channels"]]
+    except KeyError:
+        if model_config["input_dim"] < X_test.shape[2]:
+            X_test = X_test[:, :, : model_config["input_dim"]]
 
     model = create_model(model_name, model_config)
     model_path = os.path.join(args.experiment_dir, f"best_model_{representative_subject}.pt")

@@ -121,7 +121,7 @@ class RobustLOSOExperiment:
             model,
             self.device,
             optimizer=optimizer,
-            early_stopping_patience=20,
+            early_stopping_patience=self.train_config.get("patience", 10),
             checkpoint_path=checkpoint_path,
             scheduler=scheduler,
         )

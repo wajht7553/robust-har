@@ -1,8 +1,8 @@
 """Robust LOSO cross-validation training script"""
 
 import argparse
-from src.utils.config import load_config, load_model_config
 from src.experiments import RobustLOSOExperiment
+from src.utils.config import load_config, load_model_config
 
 
 def main():

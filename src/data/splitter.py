@@ -1,8 +1,8 @@
 import os
 import json
 import numpy as np
-from torch.utils.data import DataLoader
 from .dataset import HARDataset
+from torch.utils.data import DataLoader
 
 
 class LOSOSplitter:
