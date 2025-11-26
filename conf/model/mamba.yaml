@@ -1,10 +1,10 @@
 # Mamba Configuration
 name: mamba
-use_aux_head: true
+use_aux_head: false
 
 input_dim: 6  # nb_channels
-sequence_length: 128  # window_size
-nb_classes: 18
+sequence_length: 250  # window_size
+nb_classes: 8
 
 # Mamba specific settings
 d_model: 128

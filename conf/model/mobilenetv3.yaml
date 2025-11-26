@@ -1,7 +1,7 @@
 # MobileNetV3 Configuration
 name: mobilenetv3
-use_aux_head: true
+use_aux_head: false
 
 nb_channels: 6
-nb_classes: 18
+nb_classes: 8
 drop_prob: 0.3

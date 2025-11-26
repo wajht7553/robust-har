@@ -1,14 +1,14 @@
 # MobileViT Configuration
 name: mobilevit
-use_aux_head: true
+use_aux_head: false
 
-window_size: 128
+window_size: 250
 nb_channels: 6
-nb_classes: 18
+nb_classes: 8
 
 # Architecture parameters
 dims: [32, 64, 96, 128]
-num_transformer_layers: [2, 4, 3]
+num_transformer_layers: [2, 4]
 patch_size: 2
 num_heads: 4
 dropout: 0.1

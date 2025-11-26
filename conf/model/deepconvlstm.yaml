@@ -1,6 +1,6 @@
 # DeepConvLSTM Configuration
 name: deepconvlstm
-use_aux_head: true
+use_aux_head: false
 
 # Architecture settings
 nb_conv_blocks: 4
@@ -21,9 +21,9 @@ nb_units_lstm: 128
 nb_layers_lstm: 2
 
 # General settings
-window_size: 256
+window_size: 250
 nb_channels: 6
-nb_classes: 18
+nb_classes: 8
 drop_prob: 0.5
 weights_init: "xavier_normal"
 seed: 42
