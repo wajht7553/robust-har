@@ -1,0 +1,14 @@
+# Mamba Configuration
+name: mamba
+
+input_dim: 6  # nb_channels
+sequence_length: 128  # window_size
+nb_classes: 18
+
+# Mamba specific settings
+d_model: 128
+n_layers: 4
+d_state: 16
+d_conv: 4
+expand: 2
+dropout: 0.1

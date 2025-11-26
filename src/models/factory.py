@@ -1,3 +1,5 @@
+from typing import Union, Dict, Any
+from omegaconf import DictConfig
 from .DeepConvLSTM import DeepConvLSTM
 from .MobileViT import MobileViT
 from .Mamba import MambaHAR
@@ -5,13 +7,13 @@ from .TinyHAR import TinyHAR
 from .MobileNetV3 import MobileNetV3
 
 
-def create_model(model_name, config):
+def create_model(model_name: str, config: Union[Dict[str, Any], DictConfig]):
     """
     Create a model instance based on name and config.
 
     Args:
         model_name (str): Name of the model (deepconvlstm, mobilevit, mamba, tinyhar, mobilenetv3)
-        config (dict): Model configuration
+        config (dict or DictConfig): Model configuration
 
     Returns:
         nn.Module: The requested model

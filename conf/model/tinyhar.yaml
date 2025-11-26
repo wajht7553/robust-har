@@ -1,0 +1,10 @@
+# TinyHAR Configuration
+name: tinyhar
+
+window_size: 256
+nb_channels: 6
+nb_classes: 18
+
+filter_width: 5
+nb_filters: 32
+dropout: 0.5

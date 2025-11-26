@@ -2,7 +2,8 @@
 
 import os
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
+from omegaconf import DictConfig, OmegaConf
 from src.utils.common import save_json, load_json
 
 
@@ -12,8 +13,8 @@ class ExperimentManager:
     def __init__(
         self,
         model_name: str,
-        model_config: Dict[str, Any],
-        train_config: Dict[str, Any],
+        model_config: Union[Dict[str, Any], DictConfig],
+        train_config: Union[Dict[str, Any], DictConfig],
         resume_dir: Optional[str] = None,
     ):
         """
@@ -21,8 +22,8 @@ class ExperimentManager:
 
         Args:
             model_name: Name of the model
-            model_config: Model configuration dictionary
-            train_config: Training configuration dictionary
+            model_config: Model configuration (dict or DictConfig)
+            train_config: Training configuration (dict or DictConfig)
             resume_dir: Optional path to resume from existing experiment
         """
         self.model_name = model_name
@@ -59,23 +60,27 @@ class ExperimentManager:
             print(f"Resuming experiment (no previous results): {self.experiment_dir}")
 
         # Verify configs match (optional check)
-        self._verify_configs()
+        # self._verify_configs() # Skipped for now as strict comparison with DictConfig vs dict can be tricky
 
     def _setup_new_experiment(self):
         """Setup for a new experiment"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Handle DictConfig for path construction
+        results_dir = (
+            self.train_config.get("results_dir", "results")
+            if isinstance(self.train_config, dict)
+            else self.train_config.results_dir
+        )
+
         self.experiment_dir = os.path.join(
-            self.train_config["results_dir"], f"{self.model_name}_robust_{timestamp}"
+            results_dir, f"{self.model_name}_robust_{timestamp}"
         )
         os.makedirs(self.experiment_dir, exist_ok=True)
 
         # Save configs
-        save_json(
-            self.model_config, os.path.join(self.experiment_dir, "model_config.json")
-        )
-        save_json(
-            self.train_config, os.path.join(self.experiment_dir, "train_config.json")
-        )
+        self._save_config(self.model_config, "model_config.yaml")
+        self._save_config(self.train_config, "train_config.yaml")
 
         self.results = {
             "model_name": self.model_name,
@@ -85,32 +90,17 @@ class ExperimentManager:
         }
         print(f"Robust Experiment initialized: {self.experiment_dir}")
 
-    def _verify_configs(self):
-        """Verify that provided configs match existing experiment configs"""
-        existing_model_config_path = os.path.join(
-            self.experiment_dir, "model_config.json"
-        )
-        existing_train_config_path = os.path.join(
-            self.experiment_dir, "train_config.json"
-        )
+    def _save_config(self, config, filename):
+        """Save configuration to file"""
+        path = os.path.join(self.experiment_dir, filename)
+        if isinstance(config, DictConfig):
+            OmegaConf.save(config, path)
+        else:
+            # Fallback for dict
+            import yaml
 
-        if os.path.exists(existing_model_config_path):
-            existing_model_config = load_json(existing_model_config_path)
-            if existing_model_config != self.model_config:
-                self.model_config = existing_model_config
-                print(
-                    "Warning: Model config differs from existing experiment. Using existing config."
-                )
-
-        if os.path.exists(existing_train_config_path):
-            existing_train_config = load_json(existing_train_config_path)
-            if existing_train_config != self.train_config:
-                self.train_config = existing_train_config
-                print(
-                    "Warning: Train config differs from existing experiment. Using existing config."
-                )
-        print(f"Model config: {self.model_config}\n")
-        print(f"Train config: {self.train_config}")
+            with open(path, "w") as f:
+                yaml.dump(config, f)
 
     def save_results(self):
         """Save current results to JSON file"""

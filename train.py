@@ -1,59 +1,28 @@
 """Robust LOSO cross-validation training script"""
 
-import argparse
+import hydra
+from omegaconf import DictConfig, OmegaConf
 from src.experiments import RobustLOSOExperiment
-from src.utils.config import load_config, load_model_config
 
 
-def main():
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def main(cfg: DictConfig):
     """Main entry point for robust LOSO training"""
-    parser = argparse.ArgumentParser(
-        description="Train models using Robust LOSO cross-validation"
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        required=True,
-        help="Model name (e.g., mobilevit, deepconvlstm, mamba)",
-    )
-    parser.add_argument(
-        "--config",
-        type=str,
-        default=None,
-        help="Path to model config override",
-    )
-    parser.add_argument(
-        "--train_config",
-        type=str,
-        default="configs/train.yaml",
-        help="Path to training config",
-    )
-    parser.add_argument(
-        "--limit_folds",
-        type=int,
-        default=None,
-        help="Limit number of folds for debugging",
-    )
-    parser.add_argument(
-        "--resume",
-        type=str,
-        default=None,
-        help="Path to experiment directory to resume from",
-    )
-    args = parser.parse_args()
-
-    # Load configurations
-    train_config = load_config(args.train_config)
-    model_config = load_model_config(args.model, args.config)
+    # Print config for debugging
+    print(OmegaConf.to_yaml(cfg))
 
     # Create and run experiment
+    # Pass the whole config, experiment will extract what it needs
+    # Model config is now under cfg.model
+    # Train config is at root level (or we can structure it better, but for now root)
+
     experiment = RobustLOSOExperiment(
-        args.model,
-        model_config,
-        train_config,
-        resume_dir=args.resume,
+        model_name=cfg.model.name,
+        model_config=cfg.model,
+        train_config=cfg,
+        resume_dir=cfg.resume_dir,
     )
-    experiment.run(limit_folds=args.limit_folds)
+    experiment.run(limit_folds=cfg.limit_folds)
 
 
 if __name__ == "__main__":

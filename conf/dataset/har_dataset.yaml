@@ -1,0 +1,5 @@
+# @package _global_
+# Dataset Configuration
+data_dir: "dataset/processed_acc_gyr"
+input_channels: [0, 1, 2, 3, 4, 5]
+num_workers: 0

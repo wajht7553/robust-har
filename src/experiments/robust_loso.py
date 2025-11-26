@@ -2,7 +2,8 @@
 
 import torch
 import numpy as np
-from typing import Optional
+from typing import Optional, Union, Dict, Any
+from omegaconf import DictConfig
 
 from src.data.splitter import LOSOSplitter
 from src.models.factory import create_model
@@ -18,8 +19,8 @@ class RobustLOSOExperiment:
     def __init__(
         self,
         model_name: str,
-        model_config: dict,
-        train_config: dict,
+        model_config: Union[Dict[str, Any], DictConfig],
+        train_config: Union[Dict[str, Any], DictConfig],
         device: Optional[torch.device] = None,
         resume_dir: Optional[str] = None,
     ):
@@ -108,7 +109,7 @@ class RobustLOSOExperiment:
         # Create and train model
         model = create_model(self.model_name, self.model_config)
         checkpoint_path = self.exp_manager.get_checkpoint_path(test_subject)
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=self.train_config["lr"],
             weight_decay=self.train_config.get("weight_decay", 0.0),
