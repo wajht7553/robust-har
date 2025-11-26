@@ -1,5 +1,6 @@
 # TinyHAR Configuration
 name: tinyhar
+use_aux_head: true
 
 window_size: 256
 nb_channels: 6

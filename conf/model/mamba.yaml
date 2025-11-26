@@ -1,5 +1,6 @@
 # Mamba Configuration
 name: mamba
+use_aux_head: true
 
 input_dim: 6  # nb_channels
 sequence_length: 128  # window_size

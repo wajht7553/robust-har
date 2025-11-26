@@ -55,6 +55,12 @@ class MambaHAR(nn.Module):
         self.dropout = nn.Dropout(config.get("dropout", 0.1))
         self.fc = nn.Linear(d_model, self.num_classes)
 
+        # Auxiliary classifier (after middle layer)
+        self.use_aux_head = config.get("use_aux_head", False)
+        self.aux_idx = n_layers // 2
+        if self.use_aux_head:
+            self.aux_fc = nn.Linear(d_model, self.num_classes)
+
     def forward(self, x):
         """
         Args:
@@ -66,10 +72,18 @@ class MambaHAR(nn.Module):
         x = self.input_proj(x)  # (B, L, d_model)
 
         # Pass through Mamba layers with residual connections
-        for mamba_layer, layer_norm in zip(self.mamba_layers, self.layer_norms):
+        aux_out = None
+        for i, (mamba_layer, layer_norm) in enumerate(
+            zip(self.mamba_layers, self.layer_norms)
+        ):
             residual = x
             x = layer_norm(x)
             x = mamba_layer(x) + residual  # Residual connection
+
+            if self.training and self.use_aux_head and i == self.aux_idx:
+                # Global pooling for aux head
+                x_aux = x.mean(dim=1)
+                aux_out = self.aux_fc(x_aux)
 
         # Global average pooling over sequence dimension
         x = x.mean(dim=1)  # (B, d_model)
@@ -78,4 +92,6 @@ class MambaHAR(nn.Module):
         x = self.dropout(x)
         logits = self.fc(x)  # (B, num_classes)
 
+        if self.training:
+            return logits, aux_out
         return logits

@@ -28,7 +28,7 @@ class SELayer(nn.Module):
             nn.Linear(channel, channel // reduction),
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel),
-            h_sigmoid()
+            h_sigmoid(),
         )
 
     def forward(self, x):
@@ -48,7 +48,15 @@ class InvertedResidual(nn.Module):
         if inp == hidden_dim:
             self.conv = nn.Sequential(
                 # dw
-                nn.Conv1d(hidden_dim, hidden_dim, kernel_size, stride, (kernel_size - 1) // 2, groups=hidden_dim, bias=False),
+                nn.Conv1d(
+                    hidden_dim,
+                    hidden_dim,
+                    kernel_size,
+                    stride,
+                    (kernel_size - 1) // 2,
+                    groups=hidden_dim,
+                    bias=False,
+                ),
                 nn.BatchNorm1d(hidden_dim),
                 h_swish() if use_hs else nn.ReLU(inplace=True),
                 # Squeeze-and-Excite
@@ -64,7 +72,15 @@ class InvertedResidual(nn.Module):
                 nn.BatchNorm1d(hidden_dim),
                 h_swish() if use_hs else nn.ReLU(inplace=True),
                 # dw
-                nn.Conv1d(hidden_dim, hidden_dim, kernel_size, stride, (kernel_size - 1) // 2, groups=hidden_dim, bias=False),
+                nn.Conv1d(
+                    hidden_dim,
+                    hidden_dim,
+                    kernel_size,
+                    stride,
+                    (kernel_size - 1) // 2,
+                    groups=hidden_dim,
+                    bias=False,
+                ),
                 nn.BatchNorm1d(hidden_dim),
                 # Squeeze-and-Excite
                 SELayer(hidden_dim) if use_se else nn.Identity(),
@@ -87,52 +103,60 @@ class MobileNetV3(nn.Module):
         self.nb_channels = config["nb_channels"]
         self.nb_classes = config["nb_classes"]
         self.dropout_prob = config.get("drop_prob", 0.3)
-        
+
         # MobileNetV3-Small configuration adapted for 1D
         cfgs = [
-            # k, t, c, SE, HS, s 
-            [3,    1,  16, 1, 0, 2],
-            [3,  4.5,  24, 0, 0, 2],
-            [3, 3.67,  24, 0, 0, 1],
-            [5,    4,  40, 1, 1, 2],
-            [5,    6,  40, 1, 1, 1],
-            [5,    6,  40, 1, 1, 1],
-            [5,    3,  48, 1, 1, 1],
-            [5,    3,  48, 1, 1, 1],
-            [5,    6,  96, 1, 1, 2],
-            [5,    6,  96, 1, 1, 1],
-            [5,    6,  96, 1, 1, 1],
+            # k, t, c, SE, HS, s
+            [3, 1, 16, 1, 0, 2],
+            [3, 4.5, 24, 0, 0, 2],
+            [3, 3.67, 24, 0, 0, 1],
+            [5, 4, 40, 1, 1, 2],
+            [5, 6, 40, 1, 1, 1],
+            [5, 6, 40, 1, 1, 1],
+            [5, 3, 48, 1, 1, 1],
+            [5, 3, 48, 1, 1, 1],
+            [5, 6, 96, 1, 1, 2],
+            [5, 6, 96, 1, 1, 1],
+            [5, 6, 96, 1, 1, 1],
         ]
 
         # building first layer
         input_channel = 16
-        self.features = [nn.Sequential(
-            nn.Conv1d(self.nb_channels, input_channel, 3, 2, 1, bias=False),
-            nn.BatchNorm1d(input_channel),
-            h_swish()
-        )]
+        self.features = [
+            nn.Sequential(
+                nn.Conv1d(self.nb_channels, input_channel, 3, 2, 1, bias=False),
+                nn.BatchNorm1d(input_channel),
+                h_swish(),
+            )
+        ]
 
         # building inverted residual blocks
         for k, t, c, use_se, use_hs, s in cfgs:
             output_channel = c
             hidden_channel = int(input_channel * t)
-            self.features.append(InvertedResidual(input_channel, hidden_channel, output_channel, k, s, use_se, use_hs))
+            self.features.append(
+                InvertedResidual(
+                    input_channel, hidden_channel, output_channel, k, s, use_se, use_hs
+                )
+            )
             input_channel = output_channel
-        
+
         self.features = nn.Sequential(*self.features)
-        
+
         # Auxiliary classifier (attached somewhere in the middle, e.g., after 5th block)
+        self.use_aux_head = config.get("use_aux_head", False)
         self.aux_idx = 5
-        self.aux_classifier = nn.Sequential(
-            nn.AdaptiveAvgPool1d(1),
-            nn.Flatten(),
-            nn.Linear(40, self.nb_classes) # 40 is the channel count at block 5
-        )
+        if self.use_aux_head:
+            self.aux_classifier = nn.Sequential(
+                nn.AdaptiveAvgPool1d(1),
+                nn.Flatten(),
+                nn.Linear(40, self.nb_classes),  # 40 is the channel count at block 5
+            )
 
         self.conv = nn.Sequential(
             nn.Conv1d(input_channel, 576, 1, 1, 0, bias=False),
             nn.BatchNorm1d(576),
-            h_swish()
+            h_swish(),
         )
 
         self.avgpool = nn.AdaptiveAvgPool1d(1)
@@ -146,18 +170,18 @@ class MobileNetV3(nn.Module):
     def forward(self, x):
         # x shape: (batch, window_size, channels) -> (batch, channels, window_size)
         x = x.permute(0, 2, 1)
-        
+
         aux_out = None
         for i, layer in enumerate(self.features):
             x = layer(x)
-            if i == self.aux_idx and self.training:
+            if self.use_aux_head and i == self.aux_idx and self.training:
                 aux_out = self.aux_classifier(x)
-        
+
         x = self.conv(x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         out = self.classifier(x)
-        
+
         if self.training:
             return out, aux_out
         return out

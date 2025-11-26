@@ -1,5 +1,6 @@
 # DeepConvLSTM Configuration
 name: deepconvlstm
+use_aux_head: true
 
 # Architecture settings
 nb_conv_blocks: 4

@@ -1,5 +1,6 @@
 # MobileNetV3 Configuration
 name: mobilenetv3
+use_aux_head: true
 
 nb_channels: 6
 nb_classes: 18

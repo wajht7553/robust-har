@@ -295,12 +295,18 @@ class DeepConvLSTM(nn.Module):
                 self.fc = nn.Linear(self.nb_filters * self.nb_channels, self.nb_classes)
         else:
             self.fc = nn.Linear(self.nb_units_lstm, self.nb_classes)
-            
+
         # Auxiliary classifier (attached after conv blocks)
-        if self.reduce_layer:
-             self.aux_fc = nn.Linear(self.reduce_layer_output * self.nb_channels, self.nb_classes)
-        else:
-             self.aux_fc = nn.Linear(self.nb_filters * self.nb_channels, self.nb_classes)
+        self.use_aux_head = config.get("use_aux_head", False)
+        if self.use_aux_head:
+            if self.reduce_layer:
+                self.aux_fc = nn.Linear(
+                    self.reduce_layer_output * self.nb_channels, self.nb_classes
+                )
+            else:
+                self.aux_fc = nn.Linear(
+                    self.nb_filters * self.nb_channels, self.nb_classes
+                )
 
     def forward(self, x):
         # reshape data for convolutions
@@ -313,10 +319,10 @@ class DeepConvLSTM(nn.Module):
         if self.reduce_layer:
             x = self.reduce(x)
             self.final_seq_len = x.shape[2]
-            
+
         # Auxiliary output calculation
         aux_out = None
-        if self.training:
+        if self.training and self.use_aux_head:
             # Global Average Pooling for aux head
             x_aux = nn.functional.adaptive_avg_pool2d(x, (1, x.shape[3]))
             x_aux = x_aux.view(x_aux.size(0), -1)

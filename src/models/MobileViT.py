@@ -253,6 +253,15 @@ class MobileViT(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(dims[3], self.nb_classes)
 
+        # Auxiliary classifier (after stage 2)
+        self.use_aux_head = config.get("use_aux_head", False)
+        if self.use_aux_head:
+            self.aux_fc = nn.Sequential(
+                nn.AdaptiveAvgPool1d(1),
+                nn.Flatten(),
+                nn.Linear(dims[2], self.nb_classes),
+            )
+
     def forward(self, x):
         # x: (B, L, C) -> need (B, C, L) for Conv1d
         x = x.permute(0, 2, 1)  # (B, C, L)
@@ -260,12 +269,20 @@ class MobileViT(nn.Module):
         x = self.stem(x)
         x = self.stage1(x)
         x = self.stage2(x)
+
+        # Auxiliary output
+        aux_out = None
+        if self.training and self.use_aux_head:
+            aux_out = self.aux_fc(x)
+
         x = self.stage3(x)
 
         x = self.pool(x).squeeze(-1)  # (B, C)
         x = self.dropout(x)
         x = self.fc(x)
 
+        if self.training:
+            return x, aux_out
         return x
 
     def number_of_parameters(self):

@@ -13,22 +13,42 @@ class TinyHAR(nn.Module):
 
         # Temporal Convolutional Layers
         self.conv1 = nn.Sequential(
-            nn.Conv1d(self.nb_channels, self.nb_filters, kernel_size=self.filter_width, padding="same"),
+            nn.Conv1d(
+                self.nb_channels,
+                self.nb_filters,
+                kernel_size=self.filter_width,
+                padding="same",
+            ),
             nn.BatchNorm1d(self.nb_filters),
             nn.ReLU(inplace=True),
         )
         self.conv2 = nn.Sequential(
-            nn.Conv1d(self.nb_filters, self.nb_filters * 2, kernel_size=self.filter_width, padding="same"),
+            nn.Conv1d(
+                self.nb_filters,
+                self.nb_filters * 2,
+                kernel_size=self.filter_width,
+                padding="same",
+            ),
             nn.BatchNorm1d(self.nb_filters * 2),
             nn.ReLU(inplace=True),
         )
         self.conv3 = nn.Sequential(
-            nn.Conv1d(self.nb_filters * 2, self.nb_filters * 4, kernel_size=self.filter_width, padding="same"),
+            nn.Conv1d(
+                self.nb_filters * 2,
+                self.nb_filters * 4,
+                kernel_size=self.filter_width,
+                padding="same",
+            ),
             nn.BatchNorm1d(self.nb_filters * 4),
             nn.ReLU(inplace=True),
         )
         self.conv4 = nn.Sequential(
-            nn.Conv1d(self.nb_filters * 4, self.nb_filters * 8, kernel_size=self.filter_width, padding="same"),
+            nn.Conv1d(
+                self.nb_filters * 4,
+                self.nb_filters * 8,
+                kernel_size=self.filter_width,
+                padding="same",
+            ),
             nn.BatchNorm1d(self.nb_filters * 8),
             nn.ReLU(inplace=True),
         )
@@ -43,13 +63,15 @@ class TinyHAR(nn.Module):
             nn.Dropout(self.dropout_prob),
             nn.Linear(self.nb_filters * 4, self.nb_classes),
         )
-        
+
         # Auxiliary Classifier (attached after conv2)
-        self.aux_classifier = nn.Sequential(
-            nn.AdaptiveAvgPool1d(1),
-            nn.Flatten(),
-            nn.Linear(self.nb_filters * 2, self.nb_classes)
-        )
+        self.use_aux_head = config.get("use_aux_head", False)
+        if self.use_aux_head:
+            self.aux_classifier = nn.Sequential(
+                nn.AdaptiveAvgPool1d(1),
+                nn.Flatten(),
+                nn.Linear(self.nb_filters * 2, self.nb_classes),
+            )
 
     def forward(self, x):
         # x shape: (batch, window_size, channels) -> (batch, channels, window_size)
@@ -57,16 +79,18 @@ class TinyHAR(nn.Module):
 
         x = self.conv1(x)
         x = self.conv2(x)
-        
+
         # Auxiliary output
-        aux_out = self.aux_classifier(x)
-        
+        aux_out = None
+        if self.training and self.use_aux_head:
+            aux_out = self.aux_classifier(x)
+
         x = self.conv3(x)
         x = self.conv4(x)
 
         x = self.gap(x)
         x = x.view(x.size(0), -1)
-        
+
         out = self.classifier(x)
 
         if self.training:
