@@ -47,6 +47,16 @@ class ExperimentManager:
         if os.path.exists(results_path):
             self.results = load_json(results_path)
             print(f"Resuming experiment: {self.experiment_dir}")
+        # Load existing configs to ensure consistent state after resume
+        model_config_path = os.path.join(self.experiment_dir, "model_config.yaml")
+        train_config_path = os.path.join(self.experiment_dir, "train_config.yaml")
+        if os.path.exists(model_config_path):
+            self.model_config = OmegaConf.load(model_config_path)
+            print(f"Loaded model config from {model_config_path}")
+        if os.path.exists(train_config_path):
+            self.train_config = OmegaConf.load(train_config_path)
+            print(f"Loaded train config from {train_config_path}")
+
             print(f"Found {len(self.results.get('subjects', {}))} completed folds")
         else:
             # No results yet, start fresh
