@@ -2,8 +2,8 @@
 
 import os
 from datetime import datetime
-from typing import Dict, Any, Optional, Union
 from omegaconf import DictConfig, OmegaConf
+from typing import Dict, Any, Optional, Union
 from src.utils.common import save_json, load_json
 
 
@@ -68,10 +68,6 @@ class ExperimentManager:
             print(f"Loaded train config from {train_config_path}")
 
             print(f"Found {len(self.results.get('subjects', {}))} completed folds")
-            print(f"Resuming experiment (no previous results): {self.experiment_dir}")
-
-        # Verify configs match (optional check)
-        # self._verify_configs() # Skipped for now as strict comparison with DictConfig vs dict can be tricky
 
     def _setup_new_experiment(self):
         """Setup for a new experiment"""
