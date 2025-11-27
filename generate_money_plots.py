@@ -1,13 +1,14 @@
 import os
 import argparse
 import json
+import yaml
 import torch
 import numpy as np
 import glob
+from omegaconf import OmegaConf
 from src.models.factory import create_model
 from src.data.splitter import LOSOSplitter, create_dataloaders
 from src.data.transforms import (
-    SensorFailureTransform,
     MissingModalityTransform,
     NoiseInjectionTransform,
 )
@@ -15,6 +16,33 @@ from src.utils.metrics import compute_metrics
 from src.utils.common import load_model
 from src.utils.plotting import plot_robustness_curve, plot_confusion_matrix, plot_tsne
 from sklearn.metrics import confusion_matrix
+
+
+def load_config(experiment_dir, config_name):
+    """
+    Load configuration file (YAML or JSON) with backward compatibility.
+
+    Args:
+        experiment_dir: Path to experiment directory
+        config_name: Base name of config (e.g., 'model_config' or 'train_config')
+
+    Returns:
+        Config dictionary
+    """
+    # Try YAML first (new format)
+    yaml_path = os.path.join(experiment_dir, f"{config_name}.yaml")
+    if os.path.exists(yaml_path):
+        return OmegaConf.to_container(OmegaConf.load(yaml_path), resolve=True)
+
+    # Fall back to JSON (old format)
+    json_path = os.path.join(experiment_dir, f"{config_name}.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r") as f:
+            return json.load(f)
+
+    raise FileNotFoundError(
+        f"Config file not found: neither {yaml_path} nor {json_path} exists"
+    )
 
 
 def evaluate_with_transform(model, test_loader, device):
@@ -63,18 +91,21 @@ def main():
     with open(os.path.join(args.experiment_dir, "results.json"), "r") as f:
         results = json.load(f)
 
-    with open(os.path.join(args.experiment_dir, "model_config.json"), "r") as f:
-        model_config = json.load(f)
+    # Load model config (YAML or JSON)
+    model_config = load_config(args.experiment_dir, "model_config")
 
     model_name = results["model_name"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Find all trained models
     model_files = glob.glob(os.path.join(args.experiment_dir, "best_model_*.pt"))
-    subjects = sorted([
-        os.path.basename(f).replace("best_model_", "").replace(".pt", "")
-        for f in model_files
-    ], key=lambda x: int(x.replace("proband", "")))
+    subjects = sorted(
+        [
+            os.path.basename(f).replace("best_model_", "").replace(".pt", "")
+            for f in model_files
+        ],
+        key=lambda x: int(x.replace("proband", "")),
+    )
 
     if not subjects:
         print("No model files found! Cannot proceed.")
@@ -99,12 +130,21 @@ def main():
         X_train, y_train, X_test, y_test = splitter.get_train_test_split(subject)
 
         # Handle channel mismatch
+        # Support both old (nb_channels/input_dim) and new (channels) config keys
         try:
-            if model_config["nb_channels"] < X_test.shape[2]:
-                X_test = X_test[:, :, : model_config["nb_channels"]]
-        except KeyError:
-            if model_config["input_dim"] < X_test.shape[2]:
-                X_test = X_test[:, :, : model_config["input_dim"]]
+            if "channels" in model_config:
+                expected_channels = model_config["channels"]
+            elif "nb_channels" in model_config:
+                expected_channels = model_config["nb_channels"]
+            elif "input_dim" in model_config:
+                expected_channels = model_config["input_dim"]
+            else:
+                expected_channels = X_test.shape[2]  # No truncation
+
+            if expected_channels < X_test.shape[2]:
+                X_test = X_test[:, :, :expected_channels]
+        except Exception as e:
+            print(f"Warning: Could not determine channel count, using full data: {e}")
 
         # Load Model
         model = create_model(model_name, model_config)
@@ -125,7 +165,12 @@ def main():
                 )
 
             _, test_loader, _ = create_dataloaders(
-                X_train, y_train, X_test, y_test, batch_size=32, test_transform=transform
+                X_train,
+                y_train,
+                X_test,
+                y_test,
+                batch_size=32,
+                test_transform=transform,
             )
 
             metrics, _, _, _ = evaluate_with_transform(model, test_loader, device)
@@ -159,8 +204,7 @@ def main():
 
     # 2. Graceful Failure Matrix (Aggregated)
     print("\nGenerating Aggregated Confusion Matrix (Missing Gyro)...")
-    classes = ['Walk', 'Run', 'Sit', 'Stand', 'Lie', 'ClimbUp', 'ClimbDn', 'Jump']
-
+    classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
 
     cm = confusion_matrix(
         aggregated_targets_missing_gyro, aggregated_preds_missing_gyro
@@ -189,15 +233,27 @@ def main():
     X_train, y_train, X_test, y_test = splitter.get_train_test_split(
         representative_subject
     )
+
+    # Handle channel mismatch
     try:
-        if model_config["nb_channels"] < X_test.shape[2]:
-            X_test = X_test[:, :, : model_config["nb_channels"]]
-    except KeyError:
-        if model_config["input_dim"] < X_test.shape[2]:
-            X_test = X_test[:, :, : model_config["input_dim"]]
+        if "channels" in model_config:
+            expected_channels = model_config["channels"]
+        elif "nb_channels" in model_config:
+            expected_channels = model_config["nb_channels"]
+        elif "input_dim" in model_config:
+            expected_channels = model_config["input_dim"]
+        else:
+            expected_channels = X_test.shape[2]  # No truncation
+
+        if expected_channels < X_test.shape[2]:
+            X_test = X_test[:, :, :expected_channels]
+    except Exception as e:
+        print(f"Warning: Could not determine channel count, using full data: {e}")
 
     model = create_model(model_name, model_config)
-    model_path = os.path.join(args.experiment_dir, f"best_model_{representative_subject}.pt")
+    model_path = os.path.join(
+        args.experiment_dir, f"best_model_{representative_subject}.pt"
+    )
     load_model(model, model_path, device)
     model.to(device)
 
