@@ -1,7 +1,8 @@
 defaults:
   - _self_
-  - model: tinyhar
+  - model: deepconvlstm
   - dataset: har_dataset
+  - strategy: robust
 
 # Training Hyperparameters
 epochs: 1
