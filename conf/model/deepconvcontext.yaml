@@ -1,0 +1,22 @@
+# DeepConvContext Configuration
+name: deepconvcontext
+
+# Model parameters
+batch_size: 32
+channels: 6
+classes: 8
+window_size: 250
+conv_kernels: 64
+conv_kernel_size: 5
+lstm_units: 128
+lstm_layers: 2
+dropout: 0.5
+
+# Context model settings
+bidirectional: false
+type: "lstm" # Options: lstm, self-attention, transformer
+attention_num_heads: 4
+transformer_depth: 6
+
+# General settings
+seed: 42
