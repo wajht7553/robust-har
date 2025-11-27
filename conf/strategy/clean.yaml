@@ -1,0 +1,5 @@
+# Clean Strategy Configuration
+name: clean
+train_transform: clean
+test_scenarios:
+  - clean

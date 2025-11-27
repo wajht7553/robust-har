@@ -47,6 +47,16 @@ class ExperimentManager:
         if os.path.exists(results_path):
             self.results = load_json(results_path)
             print(f"Resuming experiment: {self.experiment_dir}")
+        else:
+            # No results yet, start fresh
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.results = {
+                "model_name": self.model_name,
+                "timestamp": timestamp,
+                "subjects": {},
+                "aggregate_metrics": {},
+            }
+            print(f"Resuming experiment (no previous results): {self.experiment_dir}")
         # Load existing configs to ensure consistent state after resume
         model_config_path = os.path.join(self.experiment_dir, "model_config.yaml")
         train_config_path = os.path.join(self.experiment_dir, "train_config.yaml")
@@ -58,15 +68,6 @@ class ExperimentManager:
             print(f"Loaded train config from {train_config_path}")
 
             print(f"Found {len(self.results.get('subjects', {}))} completed folds")
-        else:
-            # No results yet, start fresh
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.results = {
-                "model_name": self.model_name,
-                "timestamp": timestamp,
-                "subjects": {},
-                "aggregate_metrics": {},
-            }
             print(f"Resuming experiment (no previous results): {self.experiment_dir}")
 
         # Verify configs match (optional check)
@@ -83,8 +84,18 @@ class ExperimentManager:
             else self.train_config.results_dir
         )
 
+        # Get strategy name from config, default to 'robust' if not present
+        if isinstance(self.train_config, dict):
+            strategy_name = self.train_config.get("strategy", {}).get("name", "robust")
+        else:
+            strategy_name = (
+                self.train_config.strategy.name
+                if "strategy" in self.train_config
+                else "robust"
+            )
+
         self.experiment_dir = os.path.join(
-            results_dir, f"{self.model_name}_robust_{timestamp}"
+            results_dir, f"{self.model_name}_{strategy_name}_{timestamp}"
         )
         os.makedirs(self.experiment_dir, exist_ok=True)
 
@@ -98,7 +109,7 @@ class ExperimentManager:
             "subjects": {},
             "aggregate_metrics": {},
         }
-        print(f"Robust Experiment initialized: {self.experiment_dir}")
+        print(f"Experiment initialized: {self.experiment_dir}")
 
     def _save_config(self, config, filename):
         """Save configuration to file"""

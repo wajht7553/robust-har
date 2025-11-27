@@ -5,7 +5,7 @@ from src.training.trainer import Trainer
 from src.utils.metrics import compute_metrics
 
 
-class RobustEvaluator:
+class Evaluator:
     """Evaluates models on multiple test scenarios"""
 
     def __init__(self, model, trainer: Trainer, device):
@@ -21,20 +21,16 @@ class RobustEvaluator:
         self.trainer = trainer
         self.device = device
 
-    def evaluate_all_scenarios(
+    def evaluate(
         self,
-        test_clean_loader,
-        test_noisy_loader,
-        test_dropout_loader,
+        test_loaders: dict,
         checkpoint_path: str,
     ):
         """
         Evaluate model on all test scenarios.
 
         Args:
-            test_clean_loader: DataLoader for clean test data
-            test_noisy_loader: DataLoader for noisy test data
-            test_dropout_loader: DataLoader for dropout test data
+            test_loaders: Dictionary of DataLoaders for test scenarios
             checkpoint_path: Path to model checkpoint
 
         Returns:
@@ -51,25 +47,16 @@ class RobustEvaluator:
             _, _, y_pred, y_true = self.trainer.validate(loader)
             return compute_metrics(y_true, y_pred)
 
-        metrics_clean = evaluate_loader(test_clean_loader)
-        metrics_noisy = evaluate_loader(test_noisy_loader)
-        metrics_dropout = evaluate_loader(test_dropout_loader)
+        metrics = {}
+        for scenario, loader in test_loaders.items():
+            metrics[scenario] = evaluate_loader(loader)
 
-        return {
-            "clean": metrics_clean,
-            "noisy": metrics_noisy,
-            "dropout": metrics_dropout,
-        }
+        return metrics
 
     def print_results(self, test_subject: str, metrics: dict):
         """Print evaluation results for a subject"""
         print(f"Subject {test_subject} Results:")
-        print(
-            f"  Clean:   Acc={metrics['clean']['accuracy']:.4f}, F1={metrics['clean']['f1_macro']:.4f}"
-        )
-        print(
-            f"  Noisy:   Acc={metrics['noisy']['accuracy']:.4f}, F1={metrics['noisy']['f1_macro']:.4f}"
-        )
-        print(
-            f"  Dropout: Acc={metrics['dropout']['accuracy']:.4f}, F1={metrics['dropout']['f1_macro']:.4f}"
-        )
+        for scenario, res in metrics.items():
+            print(
+                f"  {scenario.capitalize()}:   Acc={res['accuracy']:.4f}, F1={res['f1_macro']:.4f}"
+            )

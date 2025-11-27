@@ -1,6 +1,6 @@
 """Experiment management utilities"""
+
 from .experiment_manager import ExperimentManager
-from .robust_loso import RobustLOSOExperiment
+from .loso import LOSOExperiment
 
-__all__ = ["ExperimentManager", "RobustLOSOExperiment"]
-
+__all__ = ["ExperimentManager", "LOSOExperiment"]

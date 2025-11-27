@@ -1,0 +1,7 @@
+# Robust Strategy Configuration
+name: robust
+train_transform: mixed
+test_scenarios:
+  - clean
+  - noisy
+  - dropout

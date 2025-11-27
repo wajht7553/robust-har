@@ -2,21 +2,17 @@
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
-from src.experiments import RobustLOSOExperiment
+from src.experiments.loso import LOSOExperiment
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
-    """Main entry point for robust LOSO training"""
+    """Main entry point for LOSO training"""
     # Print config for debugging
     print(OmegaConf.to_yaml(cfg))
 
     # Create and run experiment
-    # Pass the whole config, experiment will extract what it needs
-    # Model config is now under cfg.model
-    # Train config is at root level (or we can structure it better, but for now root)
-
-    experiment = RobustLOSOExperiment(
+    experiment = LOSOExperiment(
         model_name=cfg.model.name,
         model_config=cfg.model,
         train_config=cfg,
