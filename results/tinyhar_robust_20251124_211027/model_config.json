@@ -1,9 +1,0 @@
-{
-  "name": "tinyhar",
-  "window_size": 250,
-  "nb_channels": 6,
-  "nb_classes": 8,
-  "filter_width": 5,
-  "nb_filters": 32,
-  "dropout": 0.5
-}

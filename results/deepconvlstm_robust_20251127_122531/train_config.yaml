@@ -1,0 +1,37 @@
+epochs: 50
+batch_size: 32
+lr: 0.001
+weight_decay: 0.0001
+patience: 20
+aux_weight: 0.4
+results_dir: results
+seed: 42
+limit_folds: null
+resume_dir: null
+model:
+  name: deepconvlstm
+  channels: 6
+  classes: 8
+  window_size: 250
+  conv_kernels: 64
+  conv_kernel_size: 5
+  lstm_units: 128
+  lstm_layers: 2
+  dropout: 0.5
+  seed: 42
+data_dir: dataset/processed_acc_gyr
+input_channels:
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+num_workers: 0
+strategy:
+  name: robust
+  train_transform: mixed
+  test_scenarios:
+  - clean
+  - noisy
+  - dropout
