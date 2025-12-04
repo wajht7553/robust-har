@@ -1,8 +1,8 @@
 defaults:
   - _self_
-  - model: deepconvlstm
+  - model: mobilevit
   - dataset: har_dataset
-  - strategy: clean
+  - strategy: robust
 
 # Training Hyperparameters
 epochs: 50
@@ -16,4 +16,4 @@ aux_weight: 0.4
 results_dir: "results"
 seed: 42
 limit_folds: null
-resume_dir: null
+resume_dir: results\mobilevit_robust_20251128_023824
