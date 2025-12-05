@@ -1,0 +1,16 @@
+name: mobilevit
+use_aux_head: true
+window_size: 250
+nb_channels: 6
+nb_classes: 8
+dims:
+- 16
+- 32
+- 64
+- 128
+num_transformer_layers:
+- 1
+- 2
+patch_size: 2
+num_heads: 2
+dropout: 0.3
