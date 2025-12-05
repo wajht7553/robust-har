@@ -132,3 +132,49 @@ class NoiseInjectionTransform:
                 noise = torch.randn(x_aug.shape[0], device=x_aug.device) * self.noise_std
                 x_aug[:, c] += noise
         return x_aug
+
+class ModalityDropoutTransform:
+    """
+    Modality Dropout for Ablation Studies.
+    Applies dropout to gyroscope modality at a specified rate.
+    """
+    def __init__(self, dropout_rate=0.1, modality='gyro', channels_map=None):
+        """
+        Args:
+            dropout_rate: Probability of dropping the modality (0.1 = 10%, 0.3 = 30%, etc.)
+            modality: Which modality to drop (default: 'gyro')
+            channels_map: Mapping of modalities to channel indices
+        """
+        self.dropout_rate = dropout_rate
+        self.modality = modality
+        self.channels_map = channels_map or {'acc': [0, 1, 2], 'gyro': [3, 4, 5]}
+    
+    def __call__(self, x):
+        if torch.rand(1) < self.dropout_rate:
+            # Apply dropout
+            x_aug = x.clone()
+            if self.modality in self.channels_map:
+                idx = self.channels_map[self.modality]
+                valid_idx = [i for i in idx if i < x_aug.shape[1]]
+                if valid_idx:
+                    x_aug[:, valid_idx] = 0.0
+            return x_aug
+        return x
+
+class SignalDegradationTransform:
+    """
+    Signal Degradation for Ablation Studies.
+    Randomly applies one of {Noise, Drift, Saturation, Packet Loss} during training.
+    """
+    def __init__(self):
+        self.degradations = [
+            NoiseInjectionTransform(p=1.0),
+            DriftTransform(p=1.0),
+            SaturationTransform(p=1.0),
+            PacketLossTransform(p=1.0),
+        ]
+    
+    def __call__(self, x):
+        # Pick one degradation randomly
+        idx = torch.randint(0, len(self.degradations), (1,)).item()
+        return self.degradations[idx](x)

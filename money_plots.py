@@ -350,10 +350,10 @@ def plot_tsne(
             linewidth=0.5,
         )
 
-    # ax.set_xlabel("t-SNE Dimension 1", fontweight="bold")
-    # ax.set_ylabel("t-SNE Dimension 2", fontweight="bold")
-    # ax.set_title(title, fontweight="bold")
-    # ax.legend(loc="best", framealpha=0.9, ncol=2)
+    ax.set_xlabel("t-SNE Dimension 1", fontweight="bold")
+    ax.set_ylabel("t-SNE Dimension 2", fontweight="bold")
+    ax.set_title(title, fontweight="bold")
+    ax.legend(loc="best", framealpha=0.9, ncol=2)
 
     sns.despine()
 
@@ -693,58 +693,58 @@ def generate_plots(results, output_dir, args):
     classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
     condition_keys = list(condition_metrics.keys())
 
-    # # 1. Aggregated Metrics Bar Chart (Accuracy & F1 for all conditions)
-    # print("\nGenerating Aggregated Metrics Bar Chart...")
-    # plot_aggregated_metrics_bar(
-    #     condition_metrics,
-    #     os.path.join(output_dir, "aggregated_metrics_bar.png"),
-    #     model_name=model_name,
-    # )
+    # 1. Aggregated Metrics Bar Chart (Accuracy & F1 for all conditions)
+    print("\nGenerating Aggregated Metrics Bar Chart...")
+    plot_aggregated_metrics_bar(
+        condition_metrics,
+        os.path.join(output_dir, "aggregated_metrics_bar.png"),
+        model_name=model_name,
+    )
 
-    # # 2. Robustness Curve (Mean +/- Std)
-    # print("\nGenerating Robustness Curve...")
-    # plot_robustness_curve(
-    #     robustness_data,
-    #     os.path.join(output_dir, "robustness_curve.png"),
-    #     model_name=model_name,
-    # )
+    # 2. Robustness Curve (Mean +/- Std)
+    print("\nGenerating Robustness Curve...")
+    plot_robustness_curve(
+        robustness_data,
+        os.path.join(output_dir, "robustness_curve.png"),
+        model_name=model_name,
+    )
 
-    # # 3. Confusion Matrices for each condition
-    # print("\nGenerating Confusion Matrices...")
-    # for condition in condition_keys:
-    #     cm = confusion_matrix(
-    #         aggregated_targets[condition], aggregated_preds[condition]
-    #     )
-    #     safe_name = (
-    #         condition.replace(" ", "_")
-    #         .replace("(", "")
-    #         .replace(")", "")
-    #         .replace("=", "")
-    #         .replace(".", "")
-    #     )
-    #     plot_confusion_matrix(
-    #         cm,
-    #         classes,
-    #         os.path.join(output_dir, f"confusion_matrix_{safe_name}.png"),
-    #         title=f"Confusion Matrix: {condition}",
-    #         normalize=True,
-    #     )
+    # 3. Confusion Matrices for each condition
+    print("\nGenerating Confusion Matrices...")
+    for condition in condition_keys:
+        cm = confusion_matrix(
+            aggregated_targets[condition], aggregated_preds[condition]
+        )
+        safe_name = (
+            condition.replace(" ", "_")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("=", "")
+            .replace(".", "")
+        )
+        plot_confusion_matrix(
+            cm,
+            classes,
+            os.path.join(output_dir, f"confusion_matrix_{safe_name}.png"),
+            title=f"Confusion Matrix: {condition}",
+            normalize=True,
+        )
 
-    # # 4. Per-Subject Metrics (Clean condition)
-    # print("\nGenerating Per-Subject Metrics Plot...")
-    # plot_per_subject_metrics(
-    #     per_subject_metrics,
-    #     os.path.join(output_dir, "per_subject_metrics.png"),
-    #     model_name=model_name,
-    # )
+    # 4. Per-Subject Metrics (Clean condition)
+    print("\nGenerating Per-Subject Metrics Plot...")
+    plot_per_subject_metrics(
+        per_subject_metrics,
+        os.path.join(output_dir, "per_subject_metrics.png"),
+        model_name=model_name,
+    )
 
-    # # 5. Per-Subject Metrics Across Conditions
-    # print("\nGenerating Per-Subject Conditions Plot...")
-    # plot_per_subject_conditions(
-    #     per_subject_condition_metrics,
-    #     os.path.join(output_dir, "per_subject_conditions.png"),
-    #     model_name=model_name,
-    # )
+    # 5. Per-Subject Metrics Across Conditions
+    print("\nGenerating Per-Subject Conditions Plot...")
+    plot_per_subject_conditions(
+        per_subject_condition_metrics,
+        os.path.join(output_dir, "per_subject_conditions.png"),
+        model_name=model_name,
+    )
 
     # 6. t-SNE (Representative Subject)
     print("\nGenerating t-SNE for Representative Subject (clean and gyro dropout)...")

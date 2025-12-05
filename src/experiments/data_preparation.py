@@ -6,6 +6,8 @@ from src.data.transforms import (
     MixedDistributionTransform,
     MissingModalityTransform,
     NoiseInjectionTransform,
+    ModalityDropoutTransform,
+    SignalDegradationTransform,
 )
 from omegaconf import DictConfig
 
@@ -47,6 +49,14 @@ class DataPreparator:
         train_transform = None
         if self.strategy_config.train_transform == "mixed":
             train_transform = MixedDistributionTransform()
+        elif self.strategy_config.train_transform == "modality_dropout_10":
+            train_transform = ModalityDropoutTransform(dropout_rate=0.1)
+        elif self.strategy_config.train_transform == "modality_dropout_30":
+            train_transform = ModalityDropoutTransform(dropout_rate=0.3)
+        elif self.strategy_config.train_transform == "modality_dropout_50":
+            train_transform = ModalityDropoutTransform(dropout_rate=0.5)
+        elif self.strategy_config.train_transform == "signal_degradation":
+            train_transform = SignalDegradationTransform()
 
         # Train Dataset
         train_dataset = HARDataset(
