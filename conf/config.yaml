@@ -2,7 +2,7 @@ defaults:
   - _self_
   - model: mobilevit
   - dataset: har_dataset
-  - strategy: robust
+  - strategy: signal_degradation
 
 # Training Hyperparameters
 epochs: 50
@@ -16,4 +16,4 @@ aux_weight: 0.4
 results_dir: "results"
 seed: 42
 limit_folds: null
-resume_dir: results\mobilevit_robust_20251128_023824
+resume_dir: null

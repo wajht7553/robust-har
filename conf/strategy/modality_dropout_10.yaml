@@ -1,0 +1,7 @@
+# Modality Dropout 10% Strategy Configuration
+name: modality_dropout_10
+train_transform: modality_dropout_10
+test_scenarios:
+  - clean
+  - noisy
+  - dropout

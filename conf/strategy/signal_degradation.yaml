@@ -1,0 +1,7 @@
+# Signal Degradation Strategy Configuration
+name: signal_degradation
+train_transform: signal_degradation
+test_scenarios:
+  - clean
+  - noisy
+  - dropout
