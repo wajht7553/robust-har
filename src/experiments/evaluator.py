@@ -1,14 +1,13 @@
 """Evaluation utilities for robust LOSO experiments"""
 
 import torch
-from src.training.trainer import Trainer
 from src.utils.metrics import compute_metrics
 
 
 class Evaluator:
     """Evaluates models on multiple test scenarios"""
 
-    def __init__(self, model, trainer: Trainer, device):
+    def __init__(self, model, trainer, device):
         """
         Initialize evaluator.
 
@@ -23,8 +22,8 @@ class Evaluator:
 
     def evaluate(
         self,
-        test_loaders: dict,
-        checkpoint_path: str,
+        test_loaders,
+        checkpoint_path,
     ):
         """
         Evaluate model on all test scenarios.

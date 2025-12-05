@@ -18,11 +18,11 @@ class LOSOExperiment:
 
     def __init__(
         self,
-        model_name: str,
-        model_config: Union[Dict[str, Any], DictConfig],
-        train_config: Union[Dict[str, Any], DictConfig],
-        device: Optional[torch.device] = None,
-        resume_dir: Optional[str] = None,
+        model_name,
+        model_config,
+        train_config,
+        device=None,
+        resume_dir=None,
     ):
         """
         Initialize LOSO experiment.
@@ -77,8 +77,8 @@ class LOSOExperiment:
 
     def train_fold(
         self,
-        test_subject: str,
-        val_subject: str,
+        test_subject,
+        val_subject,
         X_train,
         y_train,
         X_val,

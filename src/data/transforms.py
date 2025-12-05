@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 class SensorFailureTransform:
     """
@@ -54,7 +53,8 @@ class MissingModalityTransform:
         self.p = p
 
     def __call__(self, x):
-        if torch.rand(1) > self.p: return x
+        if torch.rand(1) > self.p:
+            return x
         x_aug = x.clone()
         if self.modality in self.channels_map:
             idx = self.channels_map[self.modality]
@@ -71,7 +71,8 @@ class DriftTransform:
         self.p = p
 
     def __call__(self, x):
-        if torch.rand(1) > self.p: return x
+        if torch.rand(1) > self.p:
+            return x
         x_aug = x.clone()
         if self.axis_idx < x_aug.shape[1]:
             t = torch.arange(x_aug.shape[0], device=x_aug.device).float()
@@ -87,7 +88,8 @@ class PacketLossTransform:
         self.p = p
 
     def __call__(self, x):
-        if torch.rand(1) > self.p: return x
+        if torch.rand(1) > self.p:
+            return x
         x_aug = x.clone()
         seq_len = x_aug.shape[0]
         if self.max_samples > self.min_samples:
@@ -107,7 +109,8 @@ class SaturationTransform:
         self.p = p
 
     def __call__(self, x):
-        if torch.rand(1) > self.p: return x
+        if torch.rand(1) > self.p:
+            return x
         x_aug = x.clone()
         if self.channels:
             for c in self.channels:
@@ -125,7 +128,8 @@ class NoiseInjectionTransform:
         self.p = p
 
     def __call__(self, x):
-        if torch.rand(1) > self.p: return x
+        if torch.rand(1) > self.p:
+            return x
         x_aug = x.clone()
         for c in self.channels:
             if c < x_aug.shape[1]:

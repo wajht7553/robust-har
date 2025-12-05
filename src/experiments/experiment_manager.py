@@ -12,10 +12,10 @@ class ExperimentManager:
 
     def __init__(
         self,
-        model_name: str,
-        model_config: Union[Dict[str, Any], DictConfig],
-        train_config: Union[Dict[str, Any], DictConfig],
-        resume_dir: Optional[str] = None,
+        model_name,
+        model_config,
+        train_config,
+        resume_dir = None,
     ):
         """
         Initialize experiment manager.

@@ -9,14 +9,13 @@ from src.data.transforms import (
     ModalityDropoutTransform,
     SignalDegradationTransform,
 )
-from omegaconf import DictConfig
 
 
 class DataPreparator:
     """Prepares datasets and loaders for LOSO experiments based on strategy"""
 
     def __init__(
-        self, batch_size: int, strategy_config: DictConfig, num_workers: int = 0
+        self, batch_size, strategy_config, num_workers = 0
     ):
         """
         Initialize data preparator.

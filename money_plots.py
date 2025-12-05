@@ -219,7 +219,7 @@ def plot_robustness_curve(robustness_data, save_path, model_name="Model"):
         markeredgewidth=1,
         label=model_name,
     )
-    ax.fill_between(noise_levels, means - stds, means + stds, alpha=0.3, color=color)
+    ax.fill_between(noise_levels, means - stds, means + stds, alpha=0.5, color=color)
 
     # Annotate points
     for i, (x, y, s) in enumerate(zip(noise_levels, means, stds)):
@@ -640,7 +640,7 @@ def compute_all_metrics(args, model_name, model_config, subjects, splitter, devi
 
         # === Robustness Curve (multiple noise levels) ===
         robustness_data[subject] = []
-        noise_levels = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+        noise_levels = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
 
         for std in noise_levels:
             if std == 0.0:
@@ -866,13 +866,13 @@ def main():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="money_plots",
+        default="money_plots/corrected",
         help="Directory to save plots",
     )
     parser.add_argument(
         "--noise_std",
         type=float,
-        default=0.3,
+        default=2.0,
         help="Noise std for noisy condition",
     )
     parser.add_argument(
@@ -901,7 +901,7 @@ def main():
         results = load_results_from_json(results_cache_path)
     elif args.plot_only:
         if os.path.exists(results_cache_path):
-            print(f"Loading cached results for plotting...")
+            print("Loading cached results for plotting...")
             results = load_results_from_json(results_cache_path)
         else:
             print(f"ERROR: No cached results found at {results_cache_path}")
