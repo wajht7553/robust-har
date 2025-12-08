@@ -168,17 +168,23 @@ class ModalityDropoutTransform:
 class SignalDegradationTransform:
     """
     Signal Degradation for Ablation Studies.
-    Randomly applies one of {Noise, Drift, Saturation, Packet Loss} during training.
+    Applies degradation with probability p.
     """
-    def __init__(self):
+
+    def __init__(self, p=1.0):  # Add p parameter, default to 1.0
+        self.p = p
         self.degradations = [
             NoiseInjectionTransform(p=1.0),
             DriftTransform(p=1.0),
             SaturationTransform(p=1.0),
             PacketLossTransform(p=1.0),
         ]
-    
+
     def __call__(self, x):
+        # Apply with probability p
+        if torch.rand(1).item() >= self.p:
+            return x  # Return clean data
+
         # Pick one degradation randomly
         idx = torch.randint(0, len(self.degradations), (1,)).item()
         return self.degradations[idx](x)

@@ -1,6 +1,6 @@
 # Signal Degradation Strategy Configuration
 name: signal_degradation
-train_transform: signal_degradation
+train_transform: signal_degradation_30
 test_scenarios:
   - clean
   - noisy
