@@ -2,7 +2,7 @@ defaults:
   - _self_
   - model: mobilevit
   - dataset: har_dataset
-  - strategy: signal_degradation
+  - strategy: signal_degradation_30
 
 # Training Hyperparameters
 epochs: 50
