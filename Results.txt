@@ -1,0 +1,66 @@
+Evaluation Results:
+1. DeepConvLSTM trained in standard way (clean data):
+    - Test scenarios:
+        a. Clean data: Acc: 69.6 +- 10.2%, F1-Macro: 70.5 +- 9.5%
+        b. Noisy data (std=2.0): Acc: 31.8 += 5.7%, F1-Macro: 24.8 +- 5.0%
+        c. Gyro Dropout: Acc: 42.0 +- 10.6%, F1-Macro: 35.3 +- 11.0%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [69.6, 45.3, 31.7, 27.0, 23.2, 20.7]
+
+2. MobileViT trained in standard way (clean data):
+    - Test scenarios:
+        a. Clean data: Acc: 76.5 +- 12.0%, F1-Macro: 76.5 +- 10.8%
+        b. Noisy data (std=2.0): Acc: 19.7 +- 5.4%, F1-Macro: 12.7 +- 4.7%
+        c. Gyro Dropout: Acc: 68.1 +- 11.3%, F1-Macro: 66.9 +- 11.0%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [76.5, 32.8, 19.4, 12.6, 9.9, 9.0]
+
+3. DeepConvLSTM trained in robust way (mixed distribution):
+    - Test scenarios:
+        a. Clean data: Acc: 69.5 +- 9.7%, F1-Macro: 69.5 +- 10.4%
+        b. Noisy data (std=2.0): Acc: 64.8 +- 11.7%, F1-Macro: 63.9 +- 11.8%
+        c. Gyro Dropout: Acc: 67.4 +- 9.1%, F1-Macro: 66.7 +- 10.1%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [69.5, 63.7, 64.4, 62.0, 57.1, 51.7]
+
+4. MobileViT trained in robust way (mixed distribution):
+    - Test scenarios:
+        a. Clean data: Acc: 77.9 +- 12.2%, F1-Macro: 78.6 +- 11.8%
+        b. Noisy data (std=2.0): Acc: 65.6 +- 13.7%, F1-Macro: 65.4 +- 13.1%
+        c. Gyro Dropout: Acc: 76.3 +- 10.8%, F1-Macro: 77.7 +- 9.9%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [77.9, 69.0, 65.5, 57.5, 41.1, 23.7]
+
+Ablation Results:
+1. MobileViT Trained with gyro Dropout (p=0.1) only
+    - Test scenarios:
+            a. Clean data: Acc: 77.6 +- 10.1%, F1-Macro: 78.4 +- 10.3%
+            b. Noisy data (std=2.0): Acc: 14.7 += 4.8%, F1-Macro: 8.9 +- 3.2%
+            c. Gyro Dropout: Acc: 74.3 +- 10.2%, F1-Macro: 74.7 +- 10.7%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [77.6, 28.2, 14.6, 8.5, 7.0, 6.5]
+
+2. MobileViT Trained with gyro Dropout (p=0.3) only
+    - Test scenarios:
+            a. Clean data: Acc: 77.7 +- 11.3%, F1-Macro: 78.3 +- 11.1%
+            b. Noisy data (std=2.0): Acc: 15.8 += 3.6%, F1-Macro: 9.3 +- 3.1%
+            c. Gyro Dropout: Acc: 76.7 +- 11.0%, F1-Macro: 77.2 +- 10.6%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [77.7, 28.2, 16.0, 10.8, 8.6, 7.8]
+
+
+3. MobileViT Trained with gyro Dropout (p=0.5) only
+    - Test scenarios:
+            a. Clean data: Acc: 78.2 +- 10.3%, F1-Macro: 78.6 +- 9.5%
+            b. Noisy data (std=2.0): Acc: 15.4 += 5.4%, F1-Macro: 8.7 +- 4.7%
+            c. Gyro Dropout: Acc: 78.0 +- 10.9%, F1-Macro: 78.6 +- 10.3%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [78.2, 29.2, 15.3, 10.7, 9.3, 8.4]
+
+4. MobileViT Trained with signal degradation only
+    - Test scenarios:
+            a. Clean data: Acc: 72.6 +- 9.5%, F1-Macro: 72.7 +- 9.4%
+            b. Noisy data (std=2.0): Acc: 71.1 += 8.5%, F1-Macro: 70.4 +- 8.8%
+            c. Gyro Dropout: Acc: 35.7 +- 11.1%, F1-Macro: 28.0 +- 10.2%
+    - Noise Robustness (stds=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0]):
+      - Accuracies = [72.6, 72.8, 71.3, 67.4, 60.5, 52.4]
