@@ -1,5 +1,5 @@
 # Signal Degradation Strategy Configuration
-name: signal_degradation
+name: signal_degradation_30
 train_transform: signal_degradation_30
 test_scenarios:
   - clean
