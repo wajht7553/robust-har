@@ -55,7 +55,7 @@ class DataPreparator:
         elif self.strategy_config.train_transform == "modality_dropout_50":
             train_transform = ModalityDropoutTransform(dropout_rate=0.5)
         elif self.strategy_config.train_transform == "signal_degradation":
-            train_transform = SignalDegradationTransform(p=0.5)
+            train_transform = SignalDegradationTransform(p=0.3)
 
         # Train Dataset
         train_dataset = HARDataset(
