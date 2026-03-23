@@ -1,8 +1,8 @@
 """
 analysis_observations.py
 
-Performs exploratory analysis on dataset/processed_acc_gyr/observations.csv.
-Writes plots to dataset/processed_acc_gyr/analysis_plots/ and summary to dataset/processed_acc_gyr/analysis_summary.json
+Performs exploratory analysis on dataset/NAME/processed_acc_gyr/observations.csv.
+Writes plots to analysis/NAME/analysis_plots/ and summary to analysis/NAME/analysis_summary.json
 
 This script is written to be memory-friendly (uses chunked reading) and to produce
 useful diagnostics for modeling decisions.
@@ -21,11 +21,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-name = "RHWAR"  # RHWAR or WISDM
+name = "RWHAR"  # RWHAR or WISDM
 
 # Paths
 CSV_PATH = os.path.join("dataset", name, "processed_acc_gyr", "observations.csv")
-OUT_DIR = os.path.join("dataset", name, "processed_acc_gyr", "analysis_plots")
+OUT_DIR = os.path.join("analysis", name, "analysis_plots")
 ensure_dir = lambda p: os.makedirs(p, exist_ok=True)
 ensure_dir(OUT_DIR)
 
@@ -169,7 +169,7 @@ else:
     summary["sampling_global_mean_dt"] = None
 
 # write summary JSON
-summary_path = os.path.join(os.path.dirname(CSV_PATH), "analysis_summary.json")
+summary_path = os.path.join(os.path.dirname(OUT_DIR), "analysis_summary.json")
 with open(summary_path, "w") as f:
     json.dump(summary, f, indent=2)
 print("Wrote summary to", summary_path)

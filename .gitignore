@@ -1,10 +1,9 @@
 .vscode/
-/dataset/
 __pycache__/
 env/
 outputs/
-dataset/raw_all/
-dataset/raw_acc_gyr/
+/dataset/RWHAR/raw_all/
+/dataset/RWHAR/raw_acc_gyr/
 
 
 *.pyc
