@@ -21,9 +21,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+name = "RHWAR"  # RHWAR or WISDM
+
 # Paths
-CSV_PATH = os.path.join("dataset", "processed_acc_gyr", "observations.csv")
-OUT_DIR = os.path.join("dataset", "processed_acc_gyr", "analysis_plots")
+CSV_PATH = os.path.join("dataset", name, "processed_acc_gyr", "observations.csv")
+OUT_DIR = os.path.join("dataset", name, "processed_acc_gyr", "analysis_plots")
 ensure_dir = lambda p: os.makedirs(p, exist_ok=True)
 ensure_dir(OUT_DIR)
 

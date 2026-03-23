@@ -3,9 +3,12 @@
 __pycache__/
 env/
 outputs/
+dataset/raw_all/
+dataset/raw_acc_gyr/
 
 
 *.pyc
 *.pt
 *.pth
 *.tex
+*.zip
