@@ -1,5 +1,5 @@
 # @package _global_
 # Dataset Configuration
-data_dir: "dataset/RWHAR/processed_acc_gyr"
+data_dir: "dataset/WISDM/processed_acc_gyr"
 input_channels: [0, 1, 2, 3, 4, 5]
 num_workers: 0

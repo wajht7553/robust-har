@@ -1,8 +1,8 @@
 defaults:
   - _self_
   - model: mobilevit
-  - dataset: har_dataset
-  - strategy: signal_degradation_30
+  - dataset: wisdm_dataset
+  - strategy: clean
 
 # Training Hyperparameters
 epochs: 50
@@ -13,7 +13,7 @@ patience: 20
 aux_weight: 0.4
 
 # Experiment Settings
-results_dir: "results"
+results_dir: "results/wisdm/clean"
 seed: 42
 limit_folds: null
 resume_dir: null

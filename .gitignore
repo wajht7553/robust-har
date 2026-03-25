@@ -2,8 +2,10 @@
 __pycache__/
 env/
 outputs/
-/dataset/RWHAR/raw_all/
-/dataset/RWHAR/raw_acc_gyr/
+dataset/RWHAR/raw_all/
+dataset/RWHAR/raw_acc_gyr/
+dataset/WISDM/raw
+dataset/WISDM/raw_acc_gyr/
 
 
 *.pyc
@@ -11,3 +13,4 @@ outputs/
 *.pth
 *.tex
 *.zip
+*.pdf
