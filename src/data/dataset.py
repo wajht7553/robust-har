@@ -16,6 +16,7 @@ class HARDataset(Dataset):
             transform: callable transform to apply to the sample
         """
         self.X = torch.FloatTensor(X)
+        self.X = torch.nan_to_num(self.X, nan=0.0) # Impute NaNs to prevent normalization and loss issues
         self.y = torch.LongTensor(y)
         self.normalize = normalize
         self.transform = transform
