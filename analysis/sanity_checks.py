@@ -11,9 +11,10 @@ from src.data import splitter
 
 
 # load raw processed data
-X = np.load('dataset/processed_acc_gyr/X.npy')
-y = np.load('dataset/processed_acc_gyr/y.npy')
-with open('dataset/processed_acc_gyr/subject_index.json','r') as f:
+name = "RWHAR"  # RWHAR or WISDM
+X = np.load(f'dataset/{name}/processed_acc_gyr/X.npy')
+y = np.load(f'dataset/{name}/processed_acc_gyr/y.npy')
+with open(f'dataset/{name}/processed_acc_gyr/subject_index.json', 'r') as f:
     subj_idx = json.load(f)
 print('X.shape, y.shape, unique labels:', X.shape, y.shape, np.unique(y))
 
@@ -29,7 +30,7 @@ for c in range(X.shape[2]):
         print('channel', c, 'contains values overlapping label set (possible leak)')
 
 # Use LOSO splitter to check for exact duplicates between train/test per fold
-splitter = splitter.LOSOSplitter('dataset/processed_acc_gyr')
+splitter = splitter.LOSOSplitter(f'dataset/{name}/processed_acc_gyr')
 for subj in splitter.subjects[:]:
     X_train, y_train, X_test, y_test = splitter.get_train_test_split(subj)
     def hashes(Xarr):
