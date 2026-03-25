@@ -2,25 +2,22 @@ import os
 import json
 import numpy as np
 import pandas as pd
-from scipy import interpolate
 
 
 INPUT_DIR = "raw_acc_gyr"  # folder created after extraction
 OUTPUT_DIR = "processed_acc_gyr"  # final ML-ready dataset
-TARGET_RATE = 50  # uniform sampling frequency
+
+# To conform with RWHAR format:
+TARGET_RATE = 20  # uniform sampling frequency (matching WISDM's 20Hz)
 WINDOW_SIZE_SEC = 5.0  # window length
 STRIDE_SEC = 2.0  # window stride
 MIN_SAMPLES = TARGET_RATE * WINDOW_SIZE_SEC
 
+# All WISDM Activities mapped from the activity_key.txt
 ACTIVITIES = [
-    "walking",
-    "running",
-    "sitting",
-    "standing",
-    "lying",
-    "climbingup",
-    "climbingdown",
-    "jumping",
+    'walking', 'jogging', 'stairs', 'sitting', 'standing', 'typing',
+    'teeth', 'soup', 'chips', 'pasta', 'drinking', 'sandwich',
+    'kicking', 'catch', 'dribbling', 'writing', 'clapping', 'folding'
 ]
 
 activity_to_label = {act: i for i, act in enumerate(ACTIVITIES)}
@@ -38,57 +35,51 @@ def load_csv(path):
     """
     Loads CSV with columns:
     id, attr_time, attr_x, attr_y, attr_z
-    Handles millisecond timestamps automatically.
+    Handles nanosecond scale UNIX timestamps from WISDM.
     """
     df = pd.read_csv(path)
 
     t = df["attr_time"].values.astype(float)
 
-    # detect ms-scale timestamps
-    if np.median(np.diff(t)) > 1.0:
-        t = t / 1000.0  # convert ms → s
+    # WISDM uses nanoseconds (e.g. 90426708196641) -> ~50 million diff between 20Hz samples
+    diffs = np.diff(t)
+    if len(diffs) > 0:
+        med_diff = np.median(diffs)
+        if med_diff > 1e6:
+            t = t / 1e9  # convert ns → s
+        elif med_diff > 1.0:
+            t = t / 1000.0  # convert ms → s
 
     data = df[["attr_x", "attr_y", "attr_z"]].values.astype(float)
     return t, data
 
 
-def synchronize_streams(acc_t, acc_v, gyr_t, gyr_v, rate=100):
+def synchronize_streams(acc_t, acc_v, gyr_t, gyr_v, rate=20):
     """
-    Interpolates acc and gyr onto a common uniform timeline.
-    Returns:
-        t_uniform, acc_uniform, gyr_uniform
+    Finds the overlapping time interval and drops readings outside of it.
+    Assumes signals are ~20Hz and aligns them by truncating the longer one.
     """
-
-    # intersect time range
     t_start = max(acc_t[0], gyr_t[0])
     t_end = min(acc_t[-1], gyr_t[-1])
 
     if t_end - t_start < 2.5:
-        # too short
         return None, None, None
 
-    # build uniform timeline
-    t_uniform = np.arange(t_start, t_end, 1.0 / rate)
+    # Find the overlapping interval
+    acc_mask = (acc_t >= t_start) & (acc_t <= t_end)
+    gyr_mask = (gyr_t >= t_start) & (gyr_t <= t_end)
 
-    # define helpers
-    def interp_columns(t_src, v_src, t_new):
-        return np.vstack(
-            [
-                interpolate.interp1d(
-                    t_src,
-                    v_src[:, i],
-                    kind="linear",
-                    bounds_error=False,
-                    fill_value="extrapolate",
-                )(t_new)
-                for i in range(v_src.shape[1])
-            ]
-        ).T
+    acc_t_crop = acc_t[acc_mask]
+    acc_v_crop = acc_v[acc_mask]
+    gyr_t_crop = gyr_t[gyr_mask]
+    gyr_v_crop = gyr_v[gyr_mask]
 
-    acc_u = interp_columns(acc_t, acc_v, t_uniform)
-    gyr_u = interp_columns(gyr_t, gyr_v, t_uniform)
+    # Force equal length
+    n = min(len(acc_t_crop), len(gyr_t_crop))
+    if n == 0:
+        return None, None, None
 
-    return t_uniform, acc_u, gyr_u
+    return acc_t_crop[:n], acc_v_crop[:n], gyr_v_crop[:n]
 
 
 def make_windows(signal_array, rate, win_sec=2.0, stride_sec=1.0):
@@ -128,7 +119,7 @@ def process_participant(proband):
 
     if not os.path.isdir(acc_dir) or not os.path.isdir(gyr_dir):
         print(f"Skipping {proband}: missing acc/ or gyr/")
-        return None, None
+        return None, None, None
 
     for activity in ACTIVITIES:
         # find matching file names for acc & gyr
@@ -189,7 +180,7 @@ def process_participant(proband):
         y_list.append(labels)
 
     if len(X_list) == 0:
-        return None, None
+        return None, None, None
 
     X = np.vstack(X_list)
     y = np.concatenate(y_list)
@@ -205,7 +196,7 @@ def build_dataset():
     all_y = []
     all_raw = []
     participants = sorted(
-        os.listdir(INPUT_DIR), key=lambda x: int(x.replace("proband", ""))
+        os.listdir(INPUT_DIR), key=lambda x: int(x.replace("proband", "")) if x.replace("proband", "").isdigit() else x
     )
 
     # store per-subject sizes (useful for LOSO)

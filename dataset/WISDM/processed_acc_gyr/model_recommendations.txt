@@ -1,0 +1,13 @@
+Data analysis summary and model guidance
+------------------------------------
+Total samples: 3265171
+Sensor channels: acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z
+Estimated global sampling rate (approx): 20.00 Hz (median dt = 0.0500 s)
+
+Suggested modeling guidelines:
+- Use windowed inputs (the repo already uses 4s windows). This is sensible for activity recognition.
+- If sampling is stable around 50-100Hz, preserve temporal resolution; otherwise resample to a fixed rate.
+- Models: 1D CNNs over windows (good baseline), hybrid CNN+RNN for temporal modeling, or Transformers if you have substantial data and compute.
+- Use per-axis normalization (z-score) per-subject for robustness to device placement differences.
+- Evaluate with LOSO/subject-wise splits to measure generalization across people.
+- Augmentations: jitter, scaling, small time-warping, axis dropout, and noise injection.
