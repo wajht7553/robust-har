@@ -45,8 +45,14 @@ class LOSOExperiment:
             model_name, model_config, train_config, resume_dir
         )
 
+        # Extract random subject subset param if present
+        random_subjects = train_config.get("random_subjects", None)
+        if random_subjects is None and hasattr(train_config, "dataset"):
+            random_subjects = train_config.dataset.get("random_subjects", None)
+        seed = train_config.get("seed", 42)
+
         # Setup data splitter
-        self.splitter = LOSOSplitter(train_config["data_dir"])
+        self.splitter = LOSOSplitter(train_config["data_dir"], random_subjects, seed)
 
         # Setup data preparator
         # Extract strategy config

@@ -8,10 +8,12 @@ from torch.utils.data import DataLoader
 class LOSOSplitter:
     """Leave-One-Subject-Out cross-validation splitter"""
 
-    def __init__(self, data_dir="dataset/processed_acc_gyr"):
+    def __init__(self, data_dir="dataset/processed_acc_gyr", random_subjects=None, seed=42):
         """
         Args:
             data_dir: directory containing X.npy, y.npy, and subject_index.json
+            random_subjects: number of subjects to randomly sample, or None for all
+            seed: random seed for reproducibility
         """
         self.data_dir = data_dir
 
@@ -24,8 +26,14 @@ class LOSOSplitter:
             self.subject_index = json.load(f)
 
         self.subjects = sorted(
-            self.subject_index.keys(), key=lambda x: int(x.replace("proband", ""))
+            self.subject_index.keys(), key=lambda x: int(x.replace("proband", "")) if str(x.replace("proband", "")).isdigit() else x
         )
+        
+        if random_subjects is not None and random_subjects < len(self.subjects):
+            rng = np.random.RandomState(seed)
+            selected = rng.choice(self.subjects, size=random_subjects, replace=False).tolist()
+            self.subjects = sorted(selected)
+            print(f"Randomly selected {random_subjects} subjects for training/evaluation.")
 
         print(f"Loaded dataset: X.shape={self.X.shape}, y.shape={self.y.shape}")
         print(f"Number of subjects: {len(self.subjects)}")
