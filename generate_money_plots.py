@@ -1,7 +1,6 @@
 import os
 import argparse
 import json
-import yaml
 import torch
 import numpy as np
 import glob
@@ -77,7 +76,9 @@ def main():
     parser.add_argument(
         "--experiment_dir", type=str, required=True, help="Path to experiment directory"
     )
-    parser.add_argument("--data_dir", type=str, default="dataset/processed_acc_gyr")
+    parser.add_argument(
+        "--data_dir", type=str, default=None, help="Overrides data_dir from config"
+    )
     parser.add_argument(
         "--output_dir", type=str, default="money_plots", help="Directory to save plots"
     )
@@ -93,6 +94,22 @@ def main():
 
     # Load model config (YAML or JSON)
     model_config = load_config(args.experiment_dir, "model_config")
+    
+    try:
+        train_config = load_config(args.experiment_dir, "train_config")
+    except FileNotFoundError:
+        train_config = {}
+
+    data_dir = args.data_dir
+    if data_dir is None:
+        if "dataset" in train_config and "data_dir" in train_config["dataset"]:
+            data_dir = train_config["dataset"]["data_dir"]
+        elif "data_dir" in train_config:
+            data_dir = train_config["data_dir"]
+        else:
+            data_dir = "dataset/RWHAR/processed_acc_gyr"
+            
+    print(f"Using dataset directory: {data_dir}")
 
     model_name = results["model_name"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -104,7 +121,7 @@ def main():
             os.path.basename(f).replace("best_model_", "").replace(".pt", "")
             for f in model_files
         ],
-        key=lambda x: int(x.replace("proband", "")),
+        key=lambda x: int(''.join(filter(str.isdigit, x))) if any(c.isdigit() for c in x) else x,
     )
 
     if not subjects:
@@ -114,7 +131,7 @@ def main():
     print(f"Found {len(subjects)} subjects: {subjects}")
 
     # Load data splitter
-    splitter = LOSOSplitter(args.data_dir)
+    splitter = LOSOSplitter(data_dir)
 
     # Storage for aggregation
     robustness_data = {}  # subject -> list of {noise, acc}
@@ -204,7 +221,14 @@ def main():
 
     # 2. Graceful Failure Matrix (Aggregated)
     print("\nGenerating Aggregated Confusion Matrix (Missing Gyro)...")
-    classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
+    
+    num_classes = model_config.get("nb_classes", model_config.get("num_classes", 8))
+    
+    if "dataset" in train_config and "classes" in train_config["dataset"]:
+        classes = train_config["dataset"]["classes"]
+    else:
+        default_classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
+        classes = default_classes if num_classes == len(default_classes) else [f"Class {i}" for i in range(num_classes)]
 
     cm = confusion_matrix(
         aggregated_targets_missing_gyro, aggregated_preds_missing_gyro

@@ -71,6 +71,12 @@ class LOSOExperiment:
         self.model_config = self.exp_manager.model_config
         self.train_config = self.exp_manager.train_config
 
+        # Check configuration compatibility to prevent ignored cross-entropy dimension mismatches
+        dataset_classes = len(np.unique(self.splitter.y))
+        model_classes = self.model_config.get("nb_classes", self.model_config.get("num_classes", 8))
+        if dataset_classes != model_classes:
+            raise ValueError(f"Dataset mismatch: Model configured for {model_classes} classes, but the processed dataset contains exactly {dataset_classes} unique classes.")
+
     @property
     def experiment_dir(self):
         """Get experiment directory"""

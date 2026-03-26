@@ -3,3 +3,5 @@
 data_dir: "dataset/PAMAP2/processed_acc_gyr"
 input_channels: [0, 1, 2, 3, 4, 5]
 num_workers: 0
+classes: ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
+

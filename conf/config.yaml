@@ -13,7 +13,7 @@ patience: 20
 aux_weight: 0.4
 
 # Experiment Settings
-results_dir: "results/pamap2/clean"
+results_dir: "results/PAMAP2/clean"
 seed: 42
 limit_folds: null
 resume_dir: null

@@ -5,8 +5,10 @@ import json
 from tqdm import tqdm
 from src.data.transforms import *
 
-INPUT_DIR = "dataset/processed_acc_gyr"
-OUTPUT_BASE = "dataset"
+NAME = "PAMAP2" # "RWHAR" or "WISDM" or "PAMAP2"
+
+INPUT_DIR = f"dataset/{NAME}/processed_acc_gyr"
+OUTPUT_BASE = f"dataset/{NAME}"
 
 def load_base_dataset():
     X_path = os.path.join(INPUT_DIR, "X.npy")
