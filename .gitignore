@@ -6,6 +6,8 @@ dataset/RWHAR/raw_all/
 dataset/RWHAR/raw_acc_gyr/
 dataset/WISDM/raw
 dataset/WISDM/raw_acc_gyr/
+dataset/PAMAP2/raw
+dataset/PAMAP2/raw_acc_gyr/
 
 
 *.pyc
