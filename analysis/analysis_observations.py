@@ -21,7 +21,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-name = "WISDM"  # RWHAR or WISDM
+name = "PAMAP2"  # RWHAR or WISDM or PAMAP2
 
 # Paths
 CSV_PATH = os.path.join("dataset", name, "processed_acc_gyr", "observations.csv")
