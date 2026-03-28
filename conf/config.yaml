@@ -3,7 +3,7 @@ defaults:
   - model: mobilevit
   - dataset: pamap2_dataset
   - strategy: clean
-
+  - hparams_search: null
 # Training Hyperparameters
 epochs: 50
 batch_size: 32
@@ -17,3 +17,4 @@ results_dir: "results/PAMAP2/clean"
 seed: 42
 limit_folds: null
 resume_dir: null
+tune_mode: false

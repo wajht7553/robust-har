@@ -18,7 +18,11 @@ def main(cfg: DictConfig):
         train_config=cfg,
         resume_dir=cfg.resume_dir,
     )
-    experiment.run(limit_folds=cfg.limit_folds)
+    if cfg.get("tune_mode", False):
+        f1_macro = experiment.run_tuning()
+        return f1_macro
+    else:
+        experiment.run(limit_folds=cfg.limit_folds)
 
 
 if __name__ == "__main__":

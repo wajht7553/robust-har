@@ -165,6 +165,67 @@ class LOSOExperiment:
             "metrics": metrics,
         }
 
+    def run_tuning(self):
+        """
+        Runs a single trial on a train/validation split optimized for hyperparameter tuning.
+        Returns the evaluation macro F1 score.
+        """
+        print("\nStarting Hyperparameter Tuning Trial...")
+        
+        X_train, y_train, X_val, y_val = self.splitter.get_tuning_split(val_ratio=0.2, seed=self.train_config.get("seed", 42))
+        
+        # Prepare dataloaders
+        # For tuning, we can reuse the test evaluation pipeline on the val split
+        # so we pass X_val, y_val as both validation and test to prepare_loaders
+        (
+            train_loader,
+            val_loader,
+            test_loaders,
+            _,
+        ) = self.data_preparator.prepare_loaders(
+            X_train, y_train, X_val, y_val, X_val, y_val
+        )
+
+        model = create_model(self.model_name, self.model_config)
+        checkpoint_path = self.exp_manager.get_checkpoint_path("tuning_trial")
+        
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=self.train_config["lr"],
+            weight_decay=self.train_config.get("weight_decay", 0.0),
+        )
+
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=self.train_config["epochs"], eta_min=1e-6
+        )
+
+        trainer = Trainer(
+            model,
+            self.device,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            early_stopping_patience=self.train_config.get("patience", 10),
+            checkpoint_path=checkpoint_path,
+            aux_weight=self.train_config.get("aux_weight", 0.4),
+        )
+
+        trainer.train(train_loader, val_loader, self.train_config["epochs"])
+
+        evaluator = Evaluator(model, trainer, self.device)
+        metrics = evaluator.evaluate(
+            test_loaders,
+            checkpoint_path,
+        )
+
+        # evaluator.evaluate returns a dict mapped by scenario name, typically 'clean' is first or main.
+        # test_loaders is a dict with scenario names, e.g., {'clean': loader}
+        # metrics dict structure: {'clean': {'accuracy': x, 'f1_macro': y}, ...}
+        primary_scenario = list(metrics.keys())[0]
+        f1_macro = metrics[primary_scenario]["f1_macro"]
+        
+        print(f"Tuning Trial Finished: F1 Macro = {f1_macro:.4f}")
+        return float(f1_macro)
+
     def run(self, limit_folds: Optional[int] = None):
         """
         Run the experiment, skipping completed folds if resuming.

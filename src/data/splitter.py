@@ -103,6 +103,40 @@ class LOSOSplitter:
             
             yield test_subject, val_subject, X_train, y_train, X_val, y_val, X_test, y_test
 
+    def get_tuning_split(self, val_ratio=0.2, seed=42):
+        """
+        Creates a single train/validation split based on subjects for fast hyperparameter tuning.
+        Returns:
+            X_train, y_train, X_val, y_val
+        """
+        num_subjects = len(self.subjects)
+        num_val = max(1, int(num_subjects * val_ratio))
+        
+        # Deterministic random split to ensure consistent tuning validation set
+        rng = np.random.RandomState(seed)
+        shuffled_subjects = self.subjects.copy()
+        rng.shuffle(shuffled_subjects)
+        
+        val_subjects = set(shuffled_subjects[:num_val])
+        
+        X_train_list, y_train_list = [], []
+        X_val_list, y_val_list = [], []
+        
+        for subject in self.subjects:
+            X_subj, y_subj = self.get_subject_data(subject)
+            if subject in val_subjects:
+                X_val_list.append(X_subj)
+                y_val_list.append(y_subj)
+            else:
+                X_train_list.append(X_subj)
+                y_train_list.append(y_subj)
+                
+        return (
+            np.vstack(X_train_list),
+            np.concatenate(y_train_list),
+            np.vstack(X_val_list),
+            np.concatenate(y_val_list)
+        )
 
 def create_dataloaders(
     X_train,
