@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import json
 import torch
@@ -421,7 +422,7 @@ def plot_per_subject_metrics(subject_metrics, output_path, model_name="Model"):
     )
     ax.set_xticks(x)
     ax.set_xticklabels(
-        [s.replace("proband", "S") for s in subjects], rotation=45, ha="right"
+        [f"S{s}" if str(s).isdigit() else s.replace("proband", "S") for s in subjects], rotation=45, ha="right"
     )
     ax.legend(loc="upper right", framealpha=0.9)
     ax.set_ylim(0, 105)
@@ -483,7 +484,7 @@ def plot_per_subject_conditions(
     )
     ax.set_xticks(x)
     ax.set_xticklabels(
-        [s.replace("proband", "S") for s in subjects], rotation=45, ha="right"
+        [f"S{s}" if str(s).isdigit() else s.replace("proband", "S") for s in subjects], rotation=45, ha="right"
     )
     ax.legend(loc="lower right", framealpha=0.9, ncol=len(conditions))
     ax.set_ylim(0, 105)
@@ -690,7 +691,20 @@ def generate_plots(results, output_dir, args):
     aggregated_targets = results["aggregated_targets"]
     aggregated_preds = results["aggregated_preds"]
 
-    classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
+    try:
+        train_config = load_config(args.experiment_dir, "train_config")
+    except FileNotFoundError:
+        train_config = {}
+        
+    model_config = load_config(args.experiment_dir, "model_config")
+    num_classes = model_config.get("nb_classes", model_config.get("num_classes", 8))
+    
+    if "dataset" in train_config and "classes" in train_config["dataset"]:
+        classes = train_config["dataset"]["classes"]
+    else:
+        default_classes = ["Walk", "Run", "Sit", "Stand", "Lie", "ClimbUp", "ClimbDn", "Jump"]
+        classes = default_classes if num_classes == len(default_classes) else [f"Class {i}" for i in range(num_classes)]
+
     condition_keys = list(condition_metrics.keys())
 
     # 1. Aggregated Metrics Bar Chart (Accuracy & F1 for all conditions)
@@ -862,7 +876,9 @@ def main():
         required=True,
         help="Path to experiment directory",
     )
-    parser.add_argument("--data_dir", type=str, default="dataset/processed_acc_gyr")
+    parser.add_argument(
+        "--data_dir", type=str, default=None, help="Overrides data_dir from config"
+    )
     parser.add_argument(
         "--output_dir",
         type=str,
@@ -890,6 +906,22 @@ def main():
     # Setup output directory
     output_dir = os.path.join(args.experiment_dir, args.output_dir)
     os.makedirs(output_dir, exist_ok=True)
+
+    # Resolve data_dir from train_config if not provided
+    if args.data_dir is None:
+        try:
+            train_config = load_config(args.experiment_dir, "train_config")
+            if "dataset" in train_config and "data_dir" in train_config["dataset"]:
+                args.data_dir = train_config["dataset"]["data_dir"]
+            elif "data_dir" in train_config:
+                args.data_dir = train_config["data_dir"]
+            else:
+                print("Could not find the specified dataset, exiting...")
+                sys.exit(0)
+        except FileNotFoundError:
+                print("Could not find the specified dataset, exiting...")
+                sys.exit(0)
+    print(f"Using dataset directory for evaluation: {args.data_dir}")
 
     # Path for cached results
     results_cache_path = os.path.join(output_dir, "evaluation_results.json")
@@ -927,7 +959,7 @@ def main():
                 os.path.basename(f).replace("best_model_", "").replace(".pt", "")
                 for f in model_files
             ],
-            key=lambda x: int(x.replace("proband", "")),
+            key=lambda x: int(''.join(filter(str.isdigit, x))) if any(c.isdigit() for c in x) else x,
         )
 
         if not subjects:
