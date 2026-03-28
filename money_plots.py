@@ -329,7 +329,7 @@ def plot_tsne(
     from sklearn.manifold import TSNE
 
     # Compute t-SNE
-    tsne = TSNE(n_components=2, random_state=42, perplexity=30, n_iter=1000)
+    tsne = TSNE(n_components=2, random_state=42, perplexity=30, max_iter=1000)
     features_2d = tsne.fit_transform(features)
 
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -882,7 +882,7 @@ def main():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="money_plots/corrected",
+        default="money_plots",
         help="Directory to save plots",
     )
     parser.add_argument(
