@@ -1,5 +1,6 @@
 name: mobilehart
 variant: "XS" # Options: XS, XXS
+nb_classes: 8
 dropout: 0.3
 mlp_head_units: [1024]
 use_aux_head: false

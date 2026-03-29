@@ -292,7 +292,7 @@ class MobileHART(nn.Module):
     """
     def __init__(self, config):
         super().__init__()
-        self.nb_classes = config["nb_classes"]
+        self.nb_classes = config.get("nb_classes", config.get("num_classes", 8))
         self.variant = config.get("variant", "XS").upper()
         self.dropout_rate = config.get("dropout", 0.3)
         self.mlp_head_units = config.get("mlp_head_units", [1024])
