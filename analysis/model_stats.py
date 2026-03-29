@@ -15,6 +15,7 @@ if REPO_ROOT not in sys.path:
 # Local imports
 from src.models.DeepConvLSTM import DeepConvLSTM
 from src.models.MobileViT import MobileViT
+from src.models.MobileHART import MobileHART
 
 
 def count_params(model: torch.nn.Module) -> int:
@@ -69,6 +70,25 @@ def build_mobilevit(cfg_path: str, device: str = "cpu"):
     return model, x
 
 
+def build_mobilehart(cfg_path: str, variant: str, device: str = "cpu"):
+    cfg = load_yaml(cfg_path)
+    cfg["variant"] = variant
+    
+    # Ensures fallback keys for inference analysis
+    if "nb_channels" not in cfg:
+        cfg["nb_channels"] = 6
+    if "nb_classes" not in cfg:
+        cfg["nb_classes"] = 8
+        
+    model = MobileHART(cfg).to(device)
+
+    B = 1
+    L = cfg.get("window_size", 250)
+    C = cfg.get("nb_channels", 6)
+    x = torch.randn(B, L, C, device=device)
+    return model, x
+
+
 def format_num(n: int) -> str:
     if n is None:
         return "N/A"
@@ -89,6 +109,11 @@ def main():
         "--mobilevit_cfg",
         default=os.path.join("conf", "model", "mobilevit.yaml"),
         help="Path to MobileViT YAML config",
+    )
+    parser.add_argument(
+        "--mobilehart_cfg",
+        default=os.path.join("conf", "model", "mobilehart.yaml"),
+        help="Path to MobileHART YAML config",
     )
     parser.add_argument(
         "--device",
@@ -120,6 +145,26 @@ def main():
         "model": "MobileViT",
         "params": mv_params,
         "flops": mv_flops,
+    })
+
+    # MobileHART XS
+    mhxs_model, mhxs_input = build_mobilehart(args.mobilehart_cfg, "XS", device)
+    mhxs_params = count_params(mhxs_model)
+    mhxs_flops = try_compute_flops(mhxs_model, mhxs_input)
+    results.append({
+        "model": "MobileHART-XS",
+        "params": mhxs_params,
+        "flops": mhxs_flops,
+    })
+
+    # MobileHART XXS
+    mhxxs_model, mhxxs_input = build_mobilehart(args.mobilehart_cfg, "XXS", device)
+    mhxxs_params = count_params(mhxxs_model)
+    mhxxs_flops = try_compute_flops(mhxxs_model, mhxxs_input)
+    results.append({
+        "model": "MobileHART-XXS",
+        "params": mhxxs_params,
+        "flops": mhxxs_flops,
     })
 
     # Print results
