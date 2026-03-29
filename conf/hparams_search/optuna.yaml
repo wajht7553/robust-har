@@ -12,8 +12,8 @@ hydra:
       seed: 42
       consider_prior: true
     direction: maximize
-    study_name: robust_har_optimization
-    storage: null
+    study_name: robust_training_parameters
+    storage: sqlite:///optuna_study.db
     n_trials: 20
     n_jobs: 1
     params:
