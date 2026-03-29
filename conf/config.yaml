@@ -17,4 +17,4 @@ results_dir: "results/PAMAP2/clean"
 seed: 42
 limit_folds: null
 resume_dir: null
-tune_mode: false
+tune_mode: False
