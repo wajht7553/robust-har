@@ -45,31 +45,32 @@ class LOSOExperiment:
             model_name, model_config, train_config, resume_dir
         )
 
-        # Extract random subject subset param if present
-        random_subjects = train_config.get("random_subjects", None)
-        if random_subjects is None and hasattr(train_config, "dataset"):
-            random_subjects = train_config.dataset.get("random_subjects", None)
-        seed = train_config.get("seed", 42)
-
-        # Setup data splitter
-        self.splitter = LOSOSplitter(train_config["data_dir"], random_subjects, seed)
-
-        # Setup data preparator
-        # Extract strategy config
-        if isinstance(train_config, dict):
-            strategy_config = DictConfig(train_config.get("strategy", {}))
-        else:
-            strategy_config = train_config.strategy
-
-        self.data_preparator = DataPreparator(
-            batch_size=train_config["batch_size"],
-            strategy_config=strategy_config,
-            num_workers=0,
-        )
-
+        # IMPORTANT: Extract the correct resumed configurations BEFORE setting up data!
         self.model_name = self.exp_manager.model_name
         self.model_config = self.exp_manager.model_config
         self.train_config = self.exp_manager.train_config
+
+        # Extract random subject subset param if present
+        random_subjects = self.train_config.get("random_subjects", None)
+        if random_subjects is None and hasattr(self.train_config, "dataset"):
+            random_subjects = self.train_config.dataset.get("random_subjects", None)
+        seed = self.train_config.get("seed", 42)
+
+        # Setup data splitter
+        self.splitter = LOSOSplitter(self.train_config["data_dir"], random_subjects, seed)
+
+        # Setup data preparator
+        # Extract strategy config
+        if isinstance(self.train_config, dict):
+            strategy_config = DictConfig(self.train_config.get("strategy", {}))
+        else:
+            strategy_config = self.train_config.strategy
+
+        self.data_preparator = DataPreparator(
+            batch_size=self.train_config["batch_size"],
+            strategy_config=strategy_config,
+            num_workers=0,
+        )
 
         # Check configuration compatibility to prevent ignored cross-entropy dimension mismatches
         dataset_classes = len(np.unique(self.splitter.y))
