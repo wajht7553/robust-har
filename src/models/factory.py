@@ -5,6 +5,7 @@ from .MobileViT import MobileViT
 from .Mamba import MambaHAR
 from .TinyHAR import TinyHAR
 from .MobileNetV3 import MobileNetV3
+from .MobileHART import MobileHART
 
 
 def create_model(model_name: str, config: Union[Dict[str, Any], DictConfig]):
@@ -55,5 +56,7 @@ def create_model(model_name: str, config: Union[Dict[str, Any], DictConfig]):
         return TinyHAR(config)
     elif name == "mobilenetv3":
         return MobileNetV3(config)
+    elif name == "mobilehart":
+        return MobileHART(config)
     else:
         raise ValueError(f"Unknown model: {model_name}")

@@ -1,19 +1,19 @@
 defaults:
   - _self_
   - model: mobilevit
-  - dataset: pamap2_dataset
-  - strategy: clean
+  - dataset: har_dataset
+  - strategy: robust
   - hparams_search: null
 # Training Hyperparameters
 epochs: 50
 batch_size: 32
-lr: 0.001
+lr: 0.0005
 weight_decay: 0.0001
 patience: 20
-aux_weight: 0.4
+aux_weight: 0.0
 
 # Experiment Settings
-results_dir: "results/PAMAP2/clean"
+results_dir: "results/rwhar/robust"
 seed: 42
 limit_folds: null
 resume_dir: null
